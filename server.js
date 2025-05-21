@@ -1,4 +1,4 @@
-// Simple Express server to serve the React app
+// Basic Express server without complex routing
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -14,16 +14,16 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'build')));
 
 // API test endpoint
-app.get('/api/ping', (req, res) => {
+app.get('/api/ping', function(req, res) {
   res.json({ message: 'API is working!' });
 });
 
-// Serve the React app for all other routes (for client-side routing)
-app.get('*', (req, res) => {
+// Serve index.html without using * wildcard
+app.use(function(req, res) {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, function() {
+  console.log('Server running on port ' + PORT);
 });
