@@ -1,35 +1,29 @@
-require('dotenv').config();
+// Simple Express server to serve the React app
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const isProd = process.env.NODE_ENV === 'production';
+const PORT = process.env.PORT || 3000;
 
-app.use(cors({
-  origin: isProd ? 'https://pagomigo.com' : 'http://localhost:3000',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-// API route example
+// Serve static files from the build folder
+app.use(express.static(path.join(__dirname, 'build')));
+
+// API test endpoint
 app.get('/api/ping', (req, res) => {
-  res.json({ message: 'Pagomigo API is alive!' });
+  res.json({ message: 'API is working!' });
 });
 
-// Serve React static files in production
-if (isProd) {
-  // Adjust these paths based on where your React build files will be located
-  app.use(express.static(path.join(__dirname, 'build')));
+// Serve the React app for all other routes (for client-side routing)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
-  });
-}
-
-// Start server
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
