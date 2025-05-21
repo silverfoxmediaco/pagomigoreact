@@ -7,10 +7,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isProd = process.env.NODE_ENV === 'production';
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: isProd ? 'https://pagomigo.com' : 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // API route example
 app.get('/api/ping', (req, res) => {
@@ -19,10 +21,11 @@ app.get('/api/ping', (req, res) => {
 
 // Serve React static files in production
 if (isProd) {
-  app.use(express.static(path.join(__dirname, 'client', 'build')));
+  // Adjust these paths based on where your React build files will be located
+  app.use(express.static(path.join(__dirname, 'build')));
 
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
   });
 }
 
