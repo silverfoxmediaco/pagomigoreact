@@ -1,0 +1,359 @@
+/* src/styles/Banking.module.css */
+.bankingContainer {
+    margin-bottom: 80px;
+  }
+  
+  .noBankingContainer {
+    margin-bottom: 2rem;
+  }
+  
+  .setupBankingCard {
+    background-color: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .setupBankingCard h3 {
+    margin-top: 0;
+    color: #333;
+  }
+  
+  .setupBankingCard p {
+    color: #666;
+    margin-bottom: 1.5rem;
+  }
+  
+  .setupButton {
+    background-color: #0033cc;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .setupButton:hover {
+    background-color: #002299;
+  }
+  
+  .setupButton:disabled {
+    background-color: #99a3cc;
+    cursor: not-allowed;
+  }
+  
+  .accountsContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .accountCard {
+    background-color: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .accountInfo h3 {
+    margin: 0 0 5px 0;
+    color: #333;
+  }
+  
+  .accountType {
+    color: #666;
+    font-size: 0.9rem;
+    text-transform: capitalize;
+  }
+  
+  .accountBalance {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #0033cc;
+  }
+  
+  .actionButtons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .actionBtn {
+    padding: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .actionBtn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .transferBtn {
+    background-color: #0033cc;
+  }
+  
+  .depositBtn {
+    background-color: #2e7d32;
+  }
+  
+  .statementsBtn {
+    background-color: #1565c0;
+  }
+  
+  .transactionsSection {
+    background-color: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .transactionsSection h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  
+  .noTransactions {
+    color: #666;
+    text-align: center;
+    padding: 1rem 0;
+  }
+  
+  .transactionsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .transactionItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .transactionItem:last-child {
+    border-bottom: none;
+  }
+  
+  .transactionInfo {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .transactionDescription {
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .transactionDate {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.25rem;
+  }
+  
+  .transactionAmount {
+    font-weight: 600;
+  }
+  
+  .transactionAmount.positive {
+    color: #2e7d32;
+  }
+  
+  .transactionAmount.negative {
+    color: #c62828;
+  }
+  
+  /* Modal Styles */
+  .modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .modalContainer {
+    background-color: white;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .modalHeader h2 {
+    margin: 0;
+    color: #333;
+  }
+  
+  .closeButton {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+  }
+  
+  .modalBody {
+    padding: 1.5rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 1.5rem;
+  }
+  
+  .formGroup label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .formGroup input,
+  .formGroup select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  
+  .formGroup input:focus,
+  .formGroup select:focus {
+    outline: none;
+    border-color: #0033cc;
+  }
+  
+  .amountInputWrapper {
+    position: relative;
+  }
+  
+  .currencySymbol {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+  }
+  
+  .amountInputWrapper input {
+    padding-left: 25px;
+  }
+  
+  .modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .cancelButton,
+  .sendButton {
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  .cancelButton {
+    background-color: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+  }
+  
+  .sendButton {
+    background-color: #0033cc;
+    color: white;
+    border: none;
+  }
+  
+  .sendButton:disabled {
+    background-color: #99a3cc;
+    cursor: not-allowed;
+  }
+  
+  .errorMessage {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+  }
+  
+  .successMessage {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+  }
+  
+  .loadingContainer {
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+  }
+  
+  .errorContainer {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  
+  .retryButton {
+    background-color: #c62828;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+    cursor: pointer;
+  }
+  
+  @media (max-width: 768px) {
+    .accountsContainer {
+      grid-template-columns: 1fr;
+    }
+    
+    .actionButtons {
+      grid-template-columns: 1fr;
+    }
+  }

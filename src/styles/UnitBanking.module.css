@@ -1,0 +1,82 @@
+/* src/styles/UnitBanking.module.css */
+.bankingPageContainer {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .bankingPageContent {
+    flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    width: 100%;
+  }
+  
+  .bankingPageContent h1 {
+    margin-bottom: 2rem;
+    color: #333;
+    font-size: 2rem;
+  }
+  
+  .unitComponentContainer {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    min-height: 600px;
+    width: 100%;
+  }
+  
+  /* Unit web component takes full height of container */
+  .unitComponentContainer unit-elements-white-label-app {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 600px;
+  }
+  
+  .loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color: #666;
+  }
+  
+  .errorContainer {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+  }
+  
+  .retryButton {
+    background-color: #c62828;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.75rem 1.5rem;
+    margin-top: 1rem;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  
+  .retryButton:hover {
+    background-color: #b71c1c;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .bankingPageContent {
+      padding: 1rem;
+    }
+    
+    .unitComponentContainer {
+      padding: 0.5rem;
+    }
+  }

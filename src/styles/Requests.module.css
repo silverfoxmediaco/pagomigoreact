@@ -1,0 +1,113 @@
+/* src/styles/Requests.module.css */
+.requestsContainer {
+    width: 100%;
+  }
+  
+  .requestsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .requestItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .requestItem:last-child {
+    border-bottom: none;
+  }
+  
+  .requestInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .requester {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .requesterName {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  
+  .requestNote {
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+  }
+  
+  .requestMeta {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+  }
+  
+  .requestDate {
+    font-size: 0.85rem;
+    color: #666;
+  }
+  
+  .requestAmount {
+    font-weight: 600;
+    color: #0033cc;
+    margin: 0 16px;
+  }
+  
+  .requestActions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .payButton,
+  .declineButton {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+  }
+  
+  .payButton {
+    background-color: #0033cc;
+    color: white;
+  }
+  
+  .declineButton {
+    background-color: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+  }
+  
+  .loadingMessage,
+  .errorMessage,
+  .successMessage,
+  .emptyMessage {
+    padding: 16px;
+    text-align: center;
+  }
+  
+  .loadingMessage {
+    color: #666;
+  }
+  
+  .errorMessage {
+    color: #c62828;
+  }
+  
+  .successMessage {
+    color: #2e7d32;
+  }
+  
+  .emptyMessage {
+    color: #666;
+    font-style: italic;
+  }

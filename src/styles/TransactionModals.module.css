@@ -1,0 +1,157 @@
+/* src/styles/TransactionModals.module.css */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .modalContainer {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .modalHeader h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+  }
+  
+  .closeButton {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+  }
+  
+  .modalBody {
+    padding: 1.5rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 1.5rem;
+  }
+  
+  .formGroup label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .formGroup input,
+  .formGroup textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+  }
+  
+  .formGroup input:focus,
+  .formGroup textarea:focus {
+    border-color: #0033cc;
+    outline: none;
+  }
+  
+  .amountInput {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .currencySymbol {
+    position: absolute;
+    left: 10px;
+    color: #666;
+  }
+  
+  .amountInput input {
+    padding-left: 24px;
+  }
+  
+  .modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .cancelButton,
+  .sendButton,
+  .requestButton {
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .cancelButton {
+    background-color: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+  }
+  
+  .cancelButton:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .sendButton,
+  .requestButton {
+    background-color: #0033cc;
+    color: white;
+    border: none;
+  }
+  
+  .sendButton:hover,
+  .requestButton:hover {
+    background-color: #002299;
+  }
+  
+  .sendButton:disabled,
+  .requestButton:disabled,
+  .cancelButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .errorMessage {
+    padding: 10px;
+    margin-bottom: 1rem;
+    background-color: #ffebee;
+    border-radius: 4px;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+  }
+  
+  .successMessage {
+    padding: 10px;
+    margin-bottom: 1rem;
+    background-color: #e8f5e9;
+    border-radius: 4px;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }

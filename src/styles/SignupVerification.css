@@ -1,0 +1,124 @@
+/* src/styles/SignupVerification.css */
+.verification-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-color: #f5f7fb;
+  }
+  
+  .verification-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .verification-card h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #0033cc;
+  }
+  
+  .verification-card p {
+    margin-bottom: 25px;
+    text-align: center;
+    color: #555;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+  
+  .form-group input:focus {
+    border-color: #0033cc;
+    outline: none;
+  }
+  
+  .primary-btn {
+    width: 100%;
+    background-color: #0033cc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .primary-btn:hover {
+    background-color: #002299;
+  }
+  
+  .primary-btn:disabled {
+    background-color: #99a3cc;
+    cursor: not-allowed;
+  }
+  
+  .resend-container {
+    margin-top: 25px;
+    text-align: center;
+  }
+  
+  .resend-container p {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  
+  .text-btn {
+    background: none;
+    border: none;
+    color: #0033cc;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .text-btn:hover {
+    text-decoration: underline;
+  }
+  
+  .text-btn:disabled {
+    color: #99a3cc;
+    cursor: not-allowed;
+  }
+  
+  .message {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .message.error {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+  }
+  
+  .message.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+  }

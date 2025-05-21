@@ -1,0 +1,72 @@
+/* src/components/ProfileQRCode/ProfileQRCode.module.css */
+
+  
+  .profileQrcode {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  .qrcodeContainer {
+    margin: 0.5rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .qrcodeContainer img, 
+  .qrcodeContainer canvas {
+    max-width: 200px;
+    max-height: 200px;
+  }
+  
+  .profileQrcode h3 {
+    color: black;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .profileQrcode p {
+    color: #555;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .secondaryBtn {
+    background-color: #f0f7ff;
+    color: #0562ff;
+    border: 1px solid #0562ff;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .secondaryBtn:hover {
+    background-color: #deeaff;
+  }
+  
+  .secondaryBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #0562ff;
+    color: white;
+  }
+  
+  @media (max-width: 768px) {
+    .profileQrcode {
+      width: 100%;
+    }
+    
+    .qrcodeContainer img,
+    .qrcodeContainer canvas {
+      max-width: 180px;
+      max-height: 180px;
+    }
+  }
