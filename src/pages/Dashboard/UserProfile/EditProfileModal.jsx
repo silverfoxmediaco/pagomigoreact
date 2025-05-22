@@ -1,6 +1,6 @@
 // src/components/UserProfile/EditProfileModal.jsx
 import React, { useState, useEffect } from 'react';
-import '../../styles/EditProfileModal.module.css';
+import '../../../styles/EditProfileModal.module.css';
 
 const EditProfileModal = ({ isOpen, onClose, userData }) => {
   const [isAnimating, setIsAnimating] = useState(false);
