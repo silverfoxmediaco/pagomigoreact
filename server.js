@@ -1,4 +1,4 @@
-// Basic Express server without complex routing
+// Express server that handles Render's directory structure
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -7,42 +7,56 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const projectRoot = process.cwd();
-const buildPath = path.join(projectRoot, 'build');
+// The build directory should be at the same level as package.json
+// Based on the logs, we're in /opt/render/project/src, so build should be here
+const buildPath = path.join(__dirname, 'build');
 
-console.log('Working directory:', process.cwd());
-console.log('__dirname:', __dirname);
-console.log('Project root:', projectRoot);
-console.log('Build path:', buildPath);
+console.log('Server starting from:', __dirname);
+console.log('Looking for build directory at:', buildPath);
 
-console.log('Current directory contents:', fs.readdirSync(projectRoot));
+// Check if build directory exists
 if (fs.existsSync(buildPath)) {
   console.log('Build directory found');
   console.log('Build contents:', fs.readdirSync(buildPath));
 } else {
-  console.log('Build directory not found at:', buildPath);
+  console.log('Build directory not found');
+  console.log('Will create a simple response for now');
 }
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the build folder
-app.use(express.static(buildPath));
+// Serve static files if build exists
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+}
 
 // API test endpoint
 app.get('/api/ping', function(req, res) {
   res.json({ message: 'API is working!' });
 });
 
-// Serve the React app for all other routes
+// Serve the React app or a fallback message
 app.use(function(req, res) {
   const indexPath = path.join(buildPath, 'index.html');
-  console.log('Attempting to serve:', indexPath);
   
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(500).send(`Build files not found. Expected at: ${indexPath}`);
+    // Fallback response when build directory doesn't exist
+    res.status(200).send(`
+      <html>
+        <head><title>Build Issue</title></head>
+        <body>
+          <h1>Server is running but build files not found</h1>
+          <p>Build directory expected at: ${buildPath}</p>
+          <p>Current directory: ${__dirname}</p>
+          <p>Directory contents: ${fs.readdirSync(__dirname).join(', ')}</p>
+          <p><a href="/api/ping">Test API endpoint</a></p>
+        </body>
+      </html>
+    `);
   }
 });
 
