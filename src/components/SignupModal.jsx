@@ -75,7 +75,7 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
   console.log('Modal render decision - shouldRender:', !isOpen ? 'HIDDEN' : 'VISIBLE');
 
   if (!isOpen) {
-    console.log('Modal not rendering - isOpen is false');return null;
+    console.log('Modal not rendering - isOpen is false');return null; 
   }
   console.log('Modal IS rendering - should be visible');
   return (
