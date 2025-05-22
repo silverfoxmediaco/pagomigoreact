@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css'; // Import the default styles
+
 
 const SignupForm = ({ onSuccess, className = '' }) => {
   const [formData, setFormData] = useState({
