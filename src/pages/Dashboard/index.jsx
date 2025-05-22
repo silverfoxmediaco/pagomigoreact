@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import EditProfileModal from './UserProfile/EditProfileModal';
 import Navigation from '../../components/Navigation';
+import PlaidVerification from './Verification/PlaidVerification';
+import PlaidBankingSection from '../../components/Banking/PlaidBankingSection';
 import Footer from '../../components/Footer';
 import TransactionsList from '../../components/Transactions/TransactionsList';
 import RequestsList from '../../components/Transactions/RequestsList';
@@ -186,6 +188,24 @@ const Dashboard = () => {
                 </div>
               </div>
             </section>
+
+            {/* Plaid ID Verify App Section */}
+            <section className={styles.dashboardSection}>
+              <div className={styles.sectionHeader}>
+                <h2>Identity Verification</h2>
+                <p>Verify your identity to unlock all banking features</p>
+              </div>
+              <PlaidVerification />
+            </section>
+            <section className={styles.dashboardSection}>
+              <div className={styles.sectionHeader}>
+                <h2>External Bank Accounts</h2>
+              </div>
+              <div className={styles.dashboardCard}>
+                <PlaidBankingSection />
+              </div>
+            </section>
+
             
             {/* Unit White Label App Section */}
             <section className={styles.dashboardSection}>
