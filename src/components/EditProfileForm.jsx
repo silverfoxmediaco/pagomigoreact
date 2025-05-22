@@ -1,6 +1,6 @@
 // src/pages/Dashboard/UserProfile/EditProfileForm.jsx
 import React, { useState, useEffect } from 'react';
-import { useUserInfo } from './Userinfo';
+import { useUserInfo } from '../pages/Dashboard/UserProfile/Userinfo';
 
 const EditProfileForm = ({ onSuccess, className = '', userData }) => {
   const { updateProfile } = useUserInfo();
