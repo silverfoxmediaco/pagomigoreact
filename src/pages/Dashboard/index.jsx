@@ -1,7 +1,7 @@
 // src/pages/Dashboard/index.jsx
 import React, { useState, useEffect } from 'react';
 import { useUserProfile } from '../../hooks/useUserProfile';
-import EditProfileModal from '../../components/UserProfile/EditProfileModal';
+import EditProfileModal from './UserProfile/EditProfileModal';
 import Navigation from '../../components/Navigation';
 import Footer from '../../components/Footer';
 import TransactionsList from '../../components/Transactions/TransactionsList';
