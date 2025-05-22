@@ -24,6 +24,7 @@ import requestMoney from '../assets/requestmoneyiphoneportrait.png';
 import billPay from '../assets/billpayportait.png';
 
 const Home = () => {
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   useEffect(() => {
     // Animate elements on scroll
     const animatedElements = document.querySelectorAll(".debit-card-text, .debit-card-image");
@@ -44,6 +45,8 @@ const Home = () => {
   }, []);
 
   const openSignupModal = () => {
+    console.log('Join Now button clicked');
+    setIsSignupModalOpen(true);
     window.dispatchEvent(new CustomEvent('open-signup-modal'));
   };
 
@@ -169,7 +172,10 @@ const Home = () => {
       </section>
 
       {/* Include the SignupModal component */}
-      <SignupModal />
+      <SignupModal 
+      isOpen={isSignupModalOpen}
+      onClose={closeSignupModal}
+      />
       
       <Footer />
     </>
