@@ -113,6 +113,34 @@
   cursor: not-allowed;
 }
 
+.close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s, transform 0.3s ease;
+}
+
+.close-button:hover {
+  background-color: #f0f0f0;
+  color: #333;
+  transform: rotate(90deg); /* Rotate 90 degrees on hover */
+}
+
+.close-button:active {
+  background-color: #e0e0e0;
+  transform: rotate(180deg); /* Rotate 180 degrees when clicked */
+}
+
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .slide-modal-container {
@@ -122,5 +150,21 @@
   
   .slide-modal-body {
     padding: 1rem;
+  }
+
+  .close-button:hover {
+    transform: rotate(180deg); /* Full 180 degree rotation on desktop */
+  }
+  
+  .close-button:active {
+    transform: rotate(270deg); /* Even more rotation when clicked */
+  }
+
+  .close-button:hover {
+    transform: rotate(180deg); /* Full 180 degree rotation on desktop */
+  }
+  
+  .close-button:active {
+    transform: rotate(270deg); /* Even more rotation when clicked */
   }
 }
