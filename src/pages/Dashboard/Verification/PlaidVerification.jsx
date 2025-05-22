@@ -1,7 +1,7 @@
 // src/pages/Dashboard/Verification/PlaidVerification.jsx
 import React from 'react';
 import { usePlaid } from '../../../hooks/usePlaid';
-import styles from '../../../styles/Verification.module.css';
+import styles from '../../../styles/Dashboard.module.css';
 
 const PlaidVerification = () => {
   const { 
