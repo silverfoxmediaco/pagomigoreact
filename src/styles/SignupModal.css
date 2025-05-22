@@ -1,180 +1,126 @@
-/* src/styles/SignupModal.css */
-.modal-overlay {
+/* Slide-up Modal Styles */
+.slide-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
-.modal-container {
+.slide-modal-container {
   background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
   overflow-y: auto;
 }
 
-.modal-header {
+.slide-modal-container.slide-up {
+  transform: translateY(0);
+}
+
+.slide-modal-container.slide-down {
+  transform: translateY(100%);
+}
+
+.slide-modal-handle {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 8px 0;
+  cursor: pointer;
+}
+
+.handle-bar {
+  width: 40px;
+  height: 4px;
+  background-color: #ccc;
+  border-radius: 2px;
+}
+
+.slide-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: 0 1.5rem 1rem 1.5rem;
   border-bottom: 1px solid #eee;
 }
 
-.modal-header h2 {
+.slide-modal-header h2 {
   margin: 0;
   color: #333;
   font-size: 1.5rem;
 }
 
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #666;
-  cursor: pointer;
-}
-
-.modal-body {
+.slide-modal-body {
   padding: 1.5rem;
 }
 
-.form-group {
+.slide-modal-form .form-group {
   margin-bottom: 1.5rem;
 }
 
-.form-group label {
+.slide-modal-form .form-group label {
   display: block;
   margin-bottom: 8px;
   color: #333;
   font-weight: 500;
 }
 
-.form-group input {
+.slide-modal-form .form-group input,
+.slide-modal-form .form-group select {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s;
 }
 
-.form-group input:focus {
+.slide-modal-form .form-group input:focus,
+.slide-modal-form .form-group select:focus {
   border-color: #0033cc;
   outline: none;
 }
 
-.signup-btn {
+.slide-modal-form .signup-btn {
   width: 100%;
   background-color: #0033cc;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 12px;
+  border-radius: 8px;
+  padding: 14px;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
-.signup-btn:hover {
+.slide-modal-form .signup-btn:hover {
   background-color: #002299;
 }
 
-.signup-btn:disabled {
+.slide-modal-form .signup-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.login-link {
-  margin-top: 1.5rem;
-  text-align: center;
-}
-
-.login-link a {
-  color: #0033cc;
-  text-decoration: none;
-}
-
-.login-link a:hover {
-  text-decoration: underline;
-}
-
-.message {
-  padding: 10px;
-  margin-bottom: 1rem;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.message.error {
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1px solid #ffcdd2;
-}
-
-.message.success {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #c8e6c9;
-}
-
-/* Fix for international telephone input */
-.iti {
-  width: 100%;
-}
-
-/* Phone Input Styling */
-.PhoneInput {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-  transition: border-color 0.3s;
-}
-
-.PhoneInput:focus-within {
-  border-color: #0033cc;
-}
-
-.PhoneInputCountry {
-  display: flex;
-  align-items: center;
-  padding: 10px 8px;
-  background-color: #f8f9fa;
-  border-right: 1px solid #ddd;
-  cursor: pointer;
-}
-
-.PhoneInputCountryIcon {
-  margin-right: 4px;
-}
-
-.PhoneInputCountrySelectArrow {
-  margin-left: 4px;
-  opacity: 0.5;
-}
-
-.PhoneInputInput {
-  flex: 1;
-  border: none;
-  outline: none;
-  padding: 10px;
-  font-size: 1rem;
-  background: transparent;
-}
-
-.PhoneInputInput::placeholder {
-  color: #999;
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .slide-modal-container {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .slide-modal-body {
+    padding: 1rem;
+  }
 }
