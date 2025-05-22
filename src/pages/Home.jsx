@@ -26,6 +26,8 @@ import billPay from '../assets/billpayportait.png';
 const Home = () => {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   useEffect(() => {
+    console.log('isSignupModalOpen changed to:', isSignupModalOpen);
+  }, [isSignupModalOpen]);
     // Animate elements on scroll
     const animatedElements = document.querySelectorAll(".debit-card-text, .debit-card-image");
     const observer = new IntersectionObserver((entries) => {
@@ -46,14 +48,18 @@ const Home = () => {
 
   const openSignupModal = () => {
     console.log('Join Now button clicked');
+    console.log('Setting isSignupModalOpen to true');
     setIsSignupModalOpen(true);
+    console.log('Current state will be:', true);
     window.dispatchEvent(new CustomEvent('open-signup-modal'));
+    console.log('Custom event dispatched');
   };
 
   const closeSignupModal = () => {
+    console.log('closeSignupModal called');
     setIsSignupModalOpen(false);
   };
-  
+
   return (
     <>
       <Navigation />
