@@ -5,6 +5,7 @@ import '../styles/SignupModal.css';
 import SignupForm from './SignupForm';
 
 const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
+  console.log('SignupModal rendered with isOpen:', propIsOpen);
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const navigate = useNavigate();
   const modalRef = useRef(null);
