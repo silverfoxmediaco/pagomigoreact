@@ -1,14 +1,14 @@
-// src/provider/pages/Home.jsx
+// src/pages/Home.jsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import '../styles/Home.css'; // Fixed path - two levels up
+import '../styles/Home.css';
 
 // Import components 
-import Navigation from '../components/Navigation'; // Fixed path - two levels up
-import Footer from '../components/Footer'; // Fixed path - two levels up
-import SignupModal from '../components/SignupModal'; // Fixed path - two levels up
+import Navigation from '../components/Navigation';
+import Footer from '../components/Footer';
+import SignupModal from '../components/SignupModal';
 
-// Import images - Fixed paths - two levels up 
+// Import images
 import heroVideo from '../assets/Spanishgirlshopping.mp4'; 
 import mobileVideo from '../assets/spanishgirlshoppingmobile.mp4'; 
 import coffeemaker from '../assets/newcoffeemaker.png';
@@ -25,9 +25,14 @@ import billPay from '../assets/billpayportait.png';
 
 const Home = () => {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+
+  // Debug effect for state changes
   useEffect(() => {
     console.log('isSignupModalOpen changed to:', isSignupModalOpen);
   }, [isSignupModalOpen]);
+
+  // Animation effect
+  useEffect(() => {
     // Animate elements on scroll
     const animatedElements = document.querySelectorAll(".debit-card-text, .debit-card-image");
     const observer = new IntersectionObserver((entries) => {
@@ -181,10 +186,9 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Include the SignupModal component */}
       <SignupModal 
-      isOpen={isSignupModalOpen}
-      onClose={closeSignupModal}
+        isOpen={isSignupModalOpen}
+        onClose={closeSignupModal}
       />
       
       <Footer />
