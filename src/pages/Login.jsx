@@ -1,7 +1,7 @@
 // src/provider/pages/Login.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import '../../styles/Login.css'; // Fixed path - two levels up
+import '../styles/Login.css';
 
 // Fixed import path for AuthContext - three levels up then into context
 import { useAuth } from '../context/AuthContext';
