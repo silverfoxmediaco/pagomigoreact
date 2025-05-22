@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../../styles/SignupModal.css'; // Use the same CSS file
-import EditProfileForm from './EditProfileForm'; // We'll create this next
+import EditProfileForm from '../../../components/EditProfileForm';
 
 const EditProfileModal = ({ isOpen: propIsOpen, onClose, userData }) => {
   console.log('EditProfileModal rendered with isOpen:', propIsOpen);
