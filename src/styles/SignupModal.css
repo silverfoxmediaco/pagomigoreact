@@ -140,6 +140,82 @@
   transform: rotate(180deg); /* Rotate 180 degrees when clicked */
 }
 
+/* Terms and Conditions Checkbox */
+.terms-checkbox {
+  margin: 1rem 0;
+  padding: 0.5rem 0;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.terms-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-checkmark {
+  position: relative;
+  top: 2px;
+  height: 16px;
+  width: 16px;
+  background-color: #fff;
+  border: 2px solid #ddd;
+  border-radius: 3px;
+  margin-right: 10px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.checkbox-container:hover .checkbox-checkmark {
+  border-color: #0033cc;
+}
+
+.terms-checkbox-input:checked ~ .checkbox-checkmark {
+  background-color: #0033cc;
+  border-color: #0033cc;
+}
+
+.checkbox-checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.terms-checkbox-input:checked ~ .checkbox-checkmark:after {
+  display: block;
+}
+
+.checkbox-text {
+  color: #555;
+  flex: 1;
+}
+
+.terms-link {
+  color: #0033cc;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.terms-link:hover {
+  text-decoration: underline;
+}
+
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
@@ -166,5 +242,14 @@
   
   .close-button:active {
     transform: rotate(270deg); /* Even more rotation when clicked */
+  }
+
+  .checkbox-text {
+    font-size: 0.85rem;
+  }
+  
+  .checkbox-checkmark {
+    height: 14px;
+    width: 14px;
   }
 }

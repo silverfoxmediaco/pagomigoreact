@@ -110,7 +110,36 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
             onSuccess={handleSignupSuccess} 
             className="slide-modal-form"
           />
-          
+          <div className="terms-checkbox">
+            <label className="checkbox-container">
+              <input
+                type="checkbox"
+                required
+                className="terms-checkbox-input"
+              />
+              <span className="checkbox-checkmark"></span>
+              <span className="checkbox-text">
+                I agree to the{' '}
+                <a 
+                  href="/privacy-policy" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="terms-link"
+                >
+                  Privacy Policy
+                </a>
+                {' '}and{' '}
+                <a 
+                  href="/terms-conditions" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="terms-link"
+                >
+                  Terms & Conditions
+                </a>
+              </span>
+            </label>
+          </div>
           <div className="login-link">
             <p>Already have an account? <a href="/login" onClick={(e) => {
               e.preventDefault();
