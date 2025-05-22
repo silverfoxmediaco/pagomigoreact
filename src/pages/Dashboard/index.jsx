@@ -38,7 +38,7 @@ const Dashboard = () => {
       designs: [
         {
           name: "default",
-          url: "https://ui.dev.unit.sh/resources/outlay.png",
+          url: "/images/logodvisacard.png",
           fontColor: "#fafafa"
         }
       ]
