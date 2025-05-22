@@ -261,6 +261,10 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('token');
       localStorage.removeItem('userInfo');
       
+      // Unit cleanup (uncomment when using production tokens)
+      // localStorage.removeItem('unitCustomerToken');
+      // localStorage.removeItem('unitVerifiedCustomerToken');
+      
       setIsAuthenticated(false);
       setUser(null);
       
@@ -271,6 +275,11 @@ export function AuthProvider({ children }) {
       // Still clear local auth state even if API call fails
       localStorage.removeItem('token');
       localStorage.removeItem('userInfo');
+      
+      // Unit cleanup (uncomment when using production tokens)
+      // localStorage.removeItem('unitCustomerToken');
+      // localStorage.removeItem('unitVerifiedCustomerToken');
+      
       setIsAuthenticated(false);
       setUser(null);
       

@@ -217,6 +217,11 @@ export const AuthProvider = ({ children }) => {
     } finally {
       // Always clear local state regardless of server response
       localStorage.removeItem('token');
+      
+      // Unit cleanup (uncomment when using production tokens)
+      // localStorage.removeItem('unitCustomerToken');
+      // localStorage.removeItem('unitVerifiedCustomerToken');
+      
       setUser(null);
       setIsAuthenticated(false);
     }
