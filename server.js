@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files from the build folder
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.resolve(__dirname, 'build')));
 
 // API test endpoint
 app.get('/api/ping', function(req, res) {
