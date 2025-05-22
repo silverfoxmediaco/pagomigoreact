@@ -107,3 +107,49 @@
   .iti {
     width: 100%;
   }
+
+  /* Phone Input Styling */
+.PhoneInput {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.PhoneInput:focus-within {
+  border-color: #0033cc;
+}
+
+.PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  padding: 10px 8px;
+  background-color: #f8f9fa;
+  border-right: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.PhoneInputCountryIcon {
+  margin-right: 4px;
+}
+
+.PhoneInputCountrySelectArrow {
+  margin-left: 4px;
+  opacity: 0.5;
+}
+
+.PhoneInputInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 10px;
+  font-size: 1rem;
+  background: transparent;
+}
+
+.PhoneInputInput::placeholder {
+  color: #999;
+}
