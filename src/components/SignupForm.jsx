@@ -1,7 +1,9 @@
 // src/components/SignupForm.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css'; // Import the default styles
 
 const SignupForm = ({ onSuccess, className = '' }) => {
   const [formData, setFormData] = useState({
@@ -15,40 +17,19 @@ const SignupForm = ({ onSuccess, className = '' }) => {
   const [isError, setIsError] = useState(false);
   const { register, loading } = useAuth();
   const navigate = useNavigate();
-  const phoneInputRef = useRef(null);
-
-  // Initialize intl-tel-input if available
-  React.useEffect(() => {
-    if (phoneInputRef.current) {
-      try {
-        // Check if intlTelInput is available
-        if (window.intlTelInput) {
-          const iti = window.intlTelInput(phoneInputRef.current, {
-            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
-            preferredCountries: ['us', 'ca', 'mx'],
-            separateDialCode: true
-          });
-          
-          // Store the instance for later use
-          phoneInputRef.current.iti = iti;
-          
-          // Return cleanup function
-          return () => {
-            if (phoneInputRef.current && phoneInputRef.current.iti) {
-              phoneInputRef.current.iti.destroy();
-            }
-          };
-        }
-      } catch (error) {
-        console.error('Error initializing phone input:', error);
-      }
-    }
-  }, []);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
+    });
+  };
+
+  // Special handler for phone input
+  const handlePhoneChange = (value) => {
+    setFormData({
+      ...formData,
+      phone: value || ''
     });
   };
 
@@ -70,22 +51,14 @@ const SignupForm = ({ onSuccess, className = '' }) => {
       return;
     }
     
-    // Get formatted phone number from intl-tel-input if available
-    let phoneNumber = formData.phone;
-    if (phoneInputRef.current && phoneInputRef.current.iti) {
-      phoneNumber = phoneInputRef.current.iti.getNumber();
-    }
-    
-    // Phone format validation
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    if (!phoneRegex.test(phoneNumber.replace(/\D/g, ''))) {
+    // Phone validation - react-phone-number-input provides properly formatted numbers
+    if (!formData.phone) {
       setMessage('Please enter a valid phone number');
       setIsError(true);
       return;
     }
     
     const { confirmPassword, ...signupData } = formData;
-    signupData.phone = phoneNumber;
     
     const result = await register(signupData);
     
@@ -131,14 +104,13 @@ const SignupForm = ({ onSuccess, className = '' }) => {
         
         <div className="form-group">
           <label htmlFor="phone">Phone Number</label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            ref={phoneInputRef}
-            onChange={handleChange}
-            placeholder="Enter your phone number"
-            required
+          <PhoneInput
+            placeholder="Enter phone number"
+            value={formData.phone}
+            onChange={handlePhoneChange}
+            defaultCountry="US"
+            countries={['US', 'CA', 'MX', 'GB', 'DE', 'FR', 'ES', 'IT']} // You can customize this list
+            className="phone-input"
           />
         </div>
         
