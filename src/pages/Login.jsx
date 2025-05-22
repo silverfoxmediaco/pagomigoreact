@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 // Fixed path for components - two levels up
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import SignupModal from '../components/SignupModal'; // Add this import
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -51,6 +52,7 @@ const Login = () => {
   };
 
   const openSignupModal = () => {
+    console.log('Opening signup modal from login page'); // Add debug log
     window.dispatchEvent(new CustomEvent('open-signup-modal'));
   };
 
@@ -110,6 +112,9 @@ const Login = () => {
           </div>
         </div>
       </div>
+      
+      {/* Add the SignupModal component */}
+      <SignupModal />
       
       <Footer />
     </>
