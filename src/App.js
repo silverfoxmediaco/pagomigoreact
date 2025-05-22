@@ -6,7 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import Home from './pages/Home';
 import UnitBankingPage from './pages/UnitBanking';
-import Login from './components/Login';
+import Login from './provider/pages/Login';
 import Signup from './components/Signup';
 import SignupVerification from './components/SignupVerification';
 import Dashboard from './pages/Dashboard';
