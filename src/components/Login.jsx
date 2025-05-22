@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SignupModal from './SignupModal'; // Add this import
 import '../styles/Login.css';
 
 const Login = () => {
@@ -11,6 +12,7 @@ const Login = () => {
   });
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false); // Add signup modal state
   const { login, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,62 +49,82 @@ const Login = () => {
     }
   };
 
+  // Open signup modal function
+  const openSignupModal = (e) => {
+    e.preventDefault();
+    console.log('Opening signup modal from login page');
+    setIsSignupModalOpen(true);
+  };
+
+  // Close signup modal function
+  const closeSignupModal = () => {
+    setIsSignupModalOpen(false);
+  };
+
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h2>Welcome Back</h2>
-        
-        {message && (
-          <div className={`message ${isError ? 'error' : 'success'}`}>
-            {message}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="phone">Phone Number</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Enter your phone number"
-              required
-            />
-          </div>
+    <>
+      <div className="login-container">
+        <div className="login-card">
+          <h2>Welcome Back</h2>
           
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-            />
-          </div>
+          {message && (
+            <div className={`message ${isError ? 'error' : 'success'}`}>
+              {message}
+            </div>
+          )}
           
-          <div className="forgot-password">
-            <Link to="/forgot-password">Forgot Password?</Link>
-          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="phone">Phone Number</label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Enter your phone number"
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+            
+            <div className="forgot-password">
+              <Link to="/forgot-password">Forgot Password?</Link>
+            </div>
+            
+            <button 
+              type="submit" 
+              className="primary-btn"
+              disabled={loading}
+            >
+              {loading ? 'Logging In...' : 'Log In'}
+            </button>
+          </form>
           
-          <button 
-            type="submit" 
-            className="primary-btn"
-            disabled={loading}
-          >
-            {loading ? 'Logging In...' : 'Log In'}
-          </button>
-        </form>
-        
-        <div className="signup-link">
-          <p>Don't have an account? <Link to="/signup">Sign Up</Link></p>
+          <div className="signup-link">
+            <p>Don't have an account? <a href="#" onClick={openSignupModal}>Join Now</a></p>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Signup Modal */}
+      <SignupModal 
+        isOpen={isSignupModalOpen}
+        onClose={closeSignupModal}
+      />
+    </>
   );
 };
 
