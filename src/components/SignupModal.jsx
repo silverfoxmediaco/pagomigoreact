@@ -4,15 +4,22 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/SignupModal.css';
 import SignupForm from './SignupForm';
 
-const SignupModal = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const navigate = useNavigate();
   const modalRef = useRef(null);
 
-  // Listen for custom event to open modal
+  // Use props if provided, otherwise use internal state
+  const isOpen = propIsOpen !== undefined ? propIsOpen : internalIsOpen;
+  const closeModal = onClose || (() => setInternalIsOpen(false));
+
+  // Listen for custom event to open modal (for backward compatibility)
   useEffect(() => {
     const handleOpenModal = () => {
-      setIsOpen(true);
+      console.log('Custom event received - opening modal');
+      if (propIsOpen === undefined) {
+        setInternalIsOpen(true);
+      }
     };
 
     window.addEventListener('open-signup-modal', handleOpenModal);
@@ -20,13 +27,13 @@ const SignupModal = () => {
     return () => {
       window.removeEventListener('open-signup-modal', handleOpenModal);
     };
-  }, []);
+  }, [propIsOpen]);
 
   // Handle click outside modal to close
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
-        setIsOpen(false);
+        closeModal();
       }
     };
 
@@ -37,13 +44,13 @@ const SignupModal = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, closeModal]);
 
   // Handle escape key to close modal
   useEffect(() => {
     const handleEscKey = (event) => {
       if (event.key === 'Escape') {
-        setIsOpen(false);
+        closeModal();
       }
     };
 
@@ -54,11 +61,11 @@ const SignupModal = () => {
     return () => {
       document.removeEventListener('keydown', handleEscKey);
     };
-  }, [isOpen]);
+  }, [isOpen, closeModal]);
 
   // Handle successful signup
   const handleSignupSuccess = () => {
-    setIsOpen(false);
+    closeModal();
   };
 
   if (!isOpen) return null;
@@ -68,7 +75,7 @@ const SignupModal = () => {
       <div className="modal-container" ref={modalRef}>
         <div className="modal-header">
           <h2>Create Your Account</h2>
-          <button className="close-button" onClick={() => setIsOpen(false)}>&times;</button>
+          <button className="close-button" onClick={closeModal}>&times;</button>
         </div>
         
         <div className="modal-body">
@@ -80,7 +87,7 @@ const SignupModal = () => {
           <div className="login-link">
             <p>Already have an account? <a href="/login" onClick={(e) => {
               e.preventDefault();
-              setIsOpen(false);
+              closeModal();
               navigate('/login');
             }}>Log In</a></p>
           </div>
