@@ -1,5 +1,5 @@
 // src/provider/pages/Home.jsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Home.css'; // Fixed path - two levels up
 
@@ -50,6 +50,10 @@ const Home = () => {
     window.dispatchEvent(new CustomEvent('open-signup-modal'));
   };
 
+  const closeSignupModal = () => {
+    setIsSignupModalOpen(false);
+  };
+  
   return (
     <>
       <Navigation />
