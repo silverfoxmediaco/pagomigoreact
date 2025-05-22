@@ -69,8 +69,15 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
     closeModal();
   };
 
-  if (!isOpen) return null;
+  console.log('Modal render decision - propIsOpen:', propIsOpen);
+  console.log('Modal render decision - internalIsOpen:', internalIsOpen);
+  console.log('Modal render decision - finalIsOpen:', isOpen);
+  console.log('Modal render decision - shouldRender:', !isOpen ? 'HIDDEN' : 'VISIBLE');
 
+  if (!isOpen) {
+    console.log('Modal not rendering - isOpen is false');return null;
+  }
+  console.log('Modal IS rendering - should be visible');
   return (
     <div className="modal-overlay">
       <div className="modal-container" ref={modalRef}>
