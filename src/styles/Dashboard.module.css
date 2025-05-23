@@ -58,212 +58,50 @@
   cursor: pointer;
 }
 
-/* Add these Plaid-specific styles to your Dashboard.module.css */
-
-/* Plaid Sections Container */
-.plaidSections {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  margin-bottom: 2rem;
+.dashboardSection {
+  margin-bottom: 2.5rem;
 }
 
-@media (min-width: 1024px) {
-  .plaidSections {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-/* Identity Verification Section */
-.identitySection {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  padding: 2rem;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.identitySection::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-  transform: rotate(45deg);
-}
-
-.identitySection .sectionHeader h2 {
-  color: white;
-  font-size: 1.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.identitySection .sectionHeader p {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-/* Bank Accounts Section */
-.bankAccountsSection {
-  background: linear-gradient(135deg, #0033cc 0%, #0052ff 100%);
-  border-radius: 16px;
-  padding: 2rem;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.bankAccountsSection::before {
-  content: '';
-  position: absolute;
-  bottom: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-  transform: rotate(-45deg);
-}
-
-.bankAccountsSection .sectionHeader h2 {
-  color: white;
-  font-size: 1.75rem;
-  margin-bottom: 0.5rem;
-}
-
-/* Enhanced card styling for Plaid content */
-.plaidCard {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  backdrop-filter: blur(10px);
-  margin-top: 1rem;
-}
-
-/* Plaid action buttons */
-.plaidActionBtn {
-  background-color: white;
-  color: #0033cc;
-  border: 2px solid transparent;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.plaidActionBtn:hover {
-  background-color: rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.plaidActionBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Status indicators with icons */
-.plaidStatus {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  margin-bottom: 1rem;
-}
-
-.plaidStatus.verified {
-  background-color: rgba(46, 125, 50, 0.1);
-  color: #2e7d32;
-}
-
-.plaidStatus.pending {
-  background-color: rgba(255, 152, 0, 0.1);
-  color: #ff9800;
-}
-
-.plaidStatus.failed {
-  background-color: rgba(211, 47, 47, 0.1);
-  color: #d32f2f;
-}
-
-/* Empty state styling */
-.plaidEmptyState {
-  text-align: center;
-  padding: 3rem 2rem;
-}
-
-.plaidEmptyState h4 {
-  font-size: 1.25rem;
-  color: #333;
-  margin-bottom: 0.5rem;
-}
-
-.plaidEmptyState p {
-  color: #666;
-  margin-bottom: 1.5rem;
-}
-
-/* Connected accounts list */
-.connectedAccountsList {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.connectedAccount {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 1rem;
+.sectionHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: all 0.3s ease;
+  margin-bottom: 1rem;
 }
 
-.connectedAccount:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
+.dashboardSection h2 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.5rem;
 }
 
-/* Icon styling */
-.plaidIcon {
-  width: 24px;
-  height: 24px;
-  margin-right: 8px;
+.editProfileBtn {
+  background-color: #0033cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-/* Loading state */
-.plaidLoading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  color: rgba(255, 255, 255, 0.8);
+.editProfileBtn:hover {
+  background-color: #002299;
 }
 
-.plaidSpinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.dashboardCards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.dashboardCard {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 60px;
 }
 
 .profileInfo {
