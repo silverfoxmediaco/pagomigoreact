@@ -189,22 +189,30 @@ const Dashboard = () => {
               </div>
             </section>
 
-            {/* Plaid ID Verify App Section */}
-            <section className={styles.dashboardSection}>
-              <div className={styles.sectionHeader}>
-                <h2>Identity Verification</h2>
-                <p>Verify your identity to unlock all banking features</p>
-              </div>
-              <PlaidVerification />
-            </section>
-            <section className={styles.dashboardSection}>
-              <div className={styles.sectionHeader}>
-                <h2>External Bank Accounts</h2>
-              </div>
-              <div className={styles.dashboardCard}>
-                <PlaidBankingSection />
-              </div>
-            </section>
+            {/* Plaid Sections with Enhanced Styling */}
+<div className={styles.plaidSections}>
+  {/* Identity Verification Section */}
+  <section className={`${styles.dashboardSection} ${styles.identitySection}`}>
+    <div className={styles.sectionHeader}>
+      <h2>Identity Verification</h2>
+      <p>Verify your identity to unlock all banking features</p>
+    </div>
+    <div className={styles.plaidCard}>
+      <PlaidVerification />
+    </div>
+  </section>
+
+  {/* External Bank Accounts Section */}
+  <section className={`${styles.dashboardSection} ${styles.bankAccountsSection}`}>
+    <div className={styles.sectionHeader}>
+      <h2>External Bank Accounts</h2>
+      <p>Connect your bank for easy transfers</p>
+    </div>
+    <div className={styles.plaidCard}>
+      <PlaidBankingSection />
+    </div>
+  </section>
+</div>
 
             
             {/* Unit White Label App Section */}
