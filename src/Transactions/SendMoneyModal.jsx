@@ -1,6 +1,6 @@
 // src/components/Transactions/SendMoneyModal.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import { useTransactions } from '../../hooks/useTransactions';
+import { useTransactions } from '../hooks/useTransactions';
 import styles from '../../styles/TransactionModals.module.css';
 
 const SendMoneyModal = ({ isOpen, onClose }) => {

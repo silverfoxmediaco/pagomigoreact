@@ -60,6 +60,7 @@
 
 .dashboardSection {
   margin-bottom: 2.5rem;
+  
 }
 
 .sectionHeader {
@@ -92,7 +93,7 @@
 
 .dashboardCards {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
 }
 
@@ -293,21 +294,7 @@
   color: #666;
 }
 
-.verifyBtn {
-  background-color: #0033cc;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
 
-.verifyBtn:hover {
-  background-color: #002299;
-}
 
 /* Add these to src/styles/Dashboard.module.css */
 .tabsContainer {
@@ -344,3 +331,15 @@
 .tabContent {
   min-height: 200px;
 }
+
+@media (maxwidth: 786) {
+
+  .dashboardCards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+}
+  
+

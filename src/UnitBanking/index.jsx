@@ -1,10 +1,10 @@
 // src/pages/UnitBanking/index.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '../../components/Navigation';
-import Footer from '../../components/Footer';
-import styles from '../../styles/UnitBanking.module.css';
-import { API_BASE } from '../../config';
+import Navigation from '../components/Navigation';
+import Footer from '../components/Footer';
+import styles from './UnitBanking.module.css';
+import { API_BASE } from '../config';
 
 const UnitBankingPage = () => {
   const [jwtToken, setJwtToken] = useState('');

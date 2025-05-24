@@ -1,16 +1,15 @@
-// src/components/Transactions/SendMoneyModal.jsx
+// src/components/Transactions/RequestMoneyModal.jsx
 import React, { useState, useRef, useEffect } from 'react';
-import '../../../styles/TransactionModals.css';
+import { useTransactions } from '../hooks/useTransactions';
+import styles from '../../styles/TransactionModals.module.css';
 
-const SendMoneyModal = ({ isOpen, onClose }) => {
+const RequestMoneyModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
-    recipientName: '',
-    recipientCountry: '',
+    requestedFrom: '',
+    requestNote: '',
     amountUsd: ''
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const { requestMoney, loading, error, success } = useTransactions();
   const modalRef = useRef(null);
   
   // Handle click outside to close
@@ -66,8 +65,7 @@ const SendMoneyModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     
     // Validate form
-    if (!formData.recipientName || !formData.recipientCountry || !formData.amountUsd) {
-      setError('All fields are required');
+    if (!formData.requestedFrom || !formData.requestNote || !formData.amountUsd) {
       return;
     }
     
@@ -77,22 +75,13 @@ const SendMoneyModal = ({ isOpen, onClose }) => {
       amountUsd: parseFloat(formData.amountUsd)
     };
     
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
+    const result = await requestMoney(data);
     
-    try {
-      // Mock transaction for now
-      // In a real application, you would call your API here
-      console.log('Sending money:', data);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setSuccess('Money sent successfully!');
+    if (result.success) {
+      // Reset form
       setFormData({
-        recipientName: '',
-        recipientCountry: '',
+        requestedFrom: '',
+        requestNote: '',
         amountUsd: ''
       });
       
@@ -100,58 +89,41 @@ const SendMoneyModal = ({ isOpen, onClose }) => {
       setTimeout(() => {
         onClose();
       }, 2000);
-    } catch (err) {
-      setError(err.message || 'Failed to send money');
-    } finally {
-      setLoading(false);
     }
   };
   
   if (!isOpen) return null;
   
   return (
-    <div className="modal-overlay">
-      <div className="modal-container" ref={modalRef}>
-        <div className="modal-header">
-          <h2>Send Money</h2>
-          <button className="close-button" onClick={onClose}>&times;</button>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContainer} ref={modalRef}>
+        <div className={styles.modalHeader}>
+          <h2>Request Money</h2>
+          <button className={styles.closeButton} onClick={onClose}>&times;</button>
         </div>
         
-        <div className="modal-body">
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
+        <div className={styles.modalBody}>
+          {error && <div className={styles.errorMessage}>{error}</div>}
+          {success && <div className={styles.successMessage}>{success}</div>}
           
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="recipientName">Recipient Name</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="requestedFrom">Request From</label>
               <input
                 type="text"
-                id="recipientName"
-                name="recipientName"
-                value={formData.recipientName}
+                id="requestedFrom"
+                name="requestedFrom"
+                value={formData.requestedFrom}
                 onChange={handleChange}
-                placeholder="Enter recipient's name"
+                placeholder="Enter the person's name"
                 required
               />
             </div>
             
-            <div className="form-group">
-              <label htmlFor="recipientCountry">Recipient Country</label>
-              <input
-                type="text"
-                id="recipientCountry"
-                name="recipientCountry"
-                value={formData.recipientCountry}
-                onChange={handleChange}
-                placeholder="Enter recipient's country"
-                required
-              />
-            </div>
-            
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="amountUsd">Amount (USD)</label>
-              <div className="amount-input">
-                <span className="currency-symbol">$</span>
+              <div className={styles.amountInput}>
+                <span className={styles.currencySymbol}>$</span>
                 <input
                   type="text"
                   id="amountUsd"
@@ -165,10 +137,23 @@ const SendMoneyModal = ({ isOpen, onClose }) => {
               </div>
             </div>
             
-            <div className="modal-actions">
+            <div className={styles.formGroup}>
+              <label htmlFor="requestNote">Note</label>
+              <textarea
+                id="requestNote"
+                name="requestNote"
+                value={formData.requestNote}
+                onChange={handleChange}
+                placeholder="What's this request for?"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+            
+            <div className={styles.modalActions}>
               <button
                 type="button"
-                className="cancel-button"
+                className={styles.cancelButton}
                 onClick={onClose}
                 disabled={loading}
               >
@@ -176,10 +161,10 @@ const SendMoneyModal = ({ isOpen, onClose }) => {
               </button>
               <button
                 type="submit"
-                className="send-button"
-                disabled={loading || !formData.recipientName || !formData.recipientCountry || !formData.amountUsd}
+                className={styles.requestButton}
+                disabled={loading || !formData.requestedFrom || !formData.requestNote || !formData.amountUsd}
               >
-                {loading ? 'Sending...' : 'Send Money'}
+                {loading ? 'Requesting...' : 'Request Money'}
               </button>
             </div>
           </form>
@@ -189,4 +174,4 @@ const SendMoneyModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default SendMoneyModal;
+export default RequestMoneyModal;

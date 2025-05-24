@@ -1,8 +1,8 @@
 // src/components/Banking/BankingSection.jsx
 import React, { useState } from 'react';
 import BankTransferModal from './BankTransferModal';
-import useUnitBanking from '../../hooks/useUnitBanking';
-import styles from '../../styles/Banking.module.css';
+import useUnitBanking from './useUnitBanking';
+import styles from './Banking.module.css';
 
 const BankingSection = () => {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);

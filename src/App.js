@@ -5,7 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import Home from './pages/Home';
-import UnitBankingPage from './pages/UnitBanking';
+import UnitBankingPage from './UnitBanking';
 import Login from './pages/Login';
 import Signup from './components/Signup';
 import SignupVerification from './components/SignupVerification';

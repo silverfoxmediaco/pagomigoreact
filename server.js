@@ -1,4 +1,6 @@
 // Express server that handles Render's directory structure
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -36,6 +38,41 @@ if (fs.existsSync(buildPath)) {
 app.get('/api/ping', function(req, res) {
   res.json({ message: 'API is working!' });
 });
+
+const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
+
+// Setup Plaid client
+const plaidConfig = new Configuration({
+  basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
+  baseOptions: {
+    headers: {
+      'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
+      'PLAID-SECRET': process.env.PLAID_SECRET,
+    },
+  },
+});
+const plaidClient = new PlaidApi(plaidConfig);
+
+// Identity Verification token endpoint
+app.post('/api/plaid/create-idv-link-token', async (req, res) => {
+  try {
+    const response = await plaidClient.linkTokenCreate({
+      user: {
+        client_user_id: 'demo-user-123', // You can replace this with a real user ID
+      },
+      client_name: 'Pagomigo',
+      language: 'en',
+      country_codes: ['US'],
+      products: ['identity_verification'],
+    });
+
+    res.json({ link_token: response.data.link_token });
+  } catch (error) {
+    console.error('Plaid error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to create IDV link token' });
+  }
+});
+
 
 // Serve the React app or a fallback message
 app.use(function(req, res) {

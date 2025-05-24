@@ -3,15 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import EditProfileModal from './UserProfile/EditProfileModal';
 import Navigation from '../../components/Navigation';
-import PlaidVerification from './Verification/PlaidVerification';
-import PlaidBankingSection from '../../components/Banking/PlaidBankingSection';
+import PlaidVerification from '../../Plaid/PlaidVerification';
+import PlaidBankingSection from '../../Plaid/PlaidBankingSection';
 import Footer from '../../components/Footer';
-import TransactionsList from '../../components/Transactions/TransactionsList';
-import RequestsList from '../../components/Transactions/RequestsList';
-import SendMoneyModal from '../../components/Transactions/SendMoneyModal';
-import RequestMoneyModal from '../../components/Transactions/RequestMoneyModal';
-import BankingSection from '../../components/Banking/BankingSection';
-import ProfileQRCode from '../../components/ProfileQRCode';
+import BankingSection from '../../UnitBanking/BankingSection';
+import ProfileQRCode from '../../ProfileQRCode';
 import styles from '../../styles/Dashboard.module.css';
 
 const Dashboard = () => {
@@ -189,24 +185,22 @@ const Dashboard = () => {
               </div>
             </section>
 
-            {/* Plaid ID Verify App Section */}
-            <section className={styles.dashboardSection}>
-              <div className={styles.sectionHeader}>
-                <h2>Identity Verification</h2>
-                <p>Verify your identity to unlock all banking features</p>
-              </div>
-              <PlaidVerification />
-            </section>
-            <section className={styles.dashboardSection}>
-              <div className={styles.sectionHeader}>
-                <h2>External Bank Accounts</h2>
-              </div>
-              <div className={styles.dashboardCard}>
-                <PlaidBankingSection />
-              </div>
-            </section>
+          
+          <section className={styles.plaidGrid}>
+          <section className={styles.plaidVerificationSection}>
+            <div className={styles.sectionHeader}>
+              <h2>Plaid Identity Verification</h2>
+            </div>
+            <PlaidVerification />
+          </section>
+          <section className={styles.dashboardCard}>
+            <div className={styles.sectionHeader}>
+              <h2>External Bank Accounts</h2>
+            </div>
+            <PlaidBankingSection />
+          </section>
+        </section>
 
-            
             {/* Unit White Label App Section */}
             <section className={styles.dashboardSection}>
               <div className={styles.sectionHeader}>
@@ -242,15 +236,6 @@ const Dashboard = () => {
         userData={userData}
       />
       
-      <SendMoneyModal
-        isOpen={isSendMoneyModalOpen}
-        onClose={() => setIsSendMoneyModalOpen(false)}
-      />
-      
-      <RequestMoneyModal
-        isOpen={isRequestMoneyModalOpen}
-        onClose={() => setIsRequestMoneyModalOpen(false)}
-      />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 // src/components/Banking/BankTransferModal.jsx
 import React, { useState } from 'react';
-import useUnitBanking from '../../hooks/useUnitBanking';
-import styles from '../../styles/Banking.module.css';
+import useUnitBanking from './useUnitBanking';
+import styles from './UnitBanking.module.css';
 
 const BankTransferModal = ({ isOpen, onClose }) => {
   const [form, setForm] = useState({

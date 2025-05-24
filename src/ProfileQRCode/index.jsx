@@ -1,6 +1,6 @@
 // src/components/ProfileQRCode/index.jsx
 import React, { useEffect, useRef } from 'react';
-import styles from '../../styles/ProfileQrCode.module.css'; // Updated path to the CSS module
+import styles from '../styles/ProfileQrCode.module.css'; // Updated path to the CSS module
 
 const ProfileQRCode = ({ userData }) => {
   const qrContainerRef = useRef(null);
