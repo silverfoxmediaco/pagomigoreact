@@ -94,7 +94,7 @@
 .dashboardCards {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  gap: 20px;
 }
 
 .dashboardCard {
@@ -332,14 +332,11 @@
   min-height: 200px;
 }
 
-@media (maxwidth: 786) {
-
+@media (max-width: 768px) {
   .dashboardCards {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+    grid-template-columns: 1fr;
+    
   }
-
 }
   
 
