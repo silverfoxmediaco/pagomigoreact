@@ -7,7 +7,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Billpay from './pages/Billpay';
 import MoneyMover from './pages/MoneyMover';
-import UnitBankingPage from './UnitBanking';
 import Login from './pages/Login';
 import Signup from './components/Signup';
 import SignupVerification from './components/SignupVerification';
@@ -24,7 +23,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/billpay" element={<Billpay />} />
             <Route path="/moneymover" element={<MoneyMover />} />
-            <Route path="/banking" element={<UnitBankingPage />} />
+            <Route path="/banking" element={<UnitBanking />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify" element={<SignupVerification />} />

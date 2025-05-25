@@ -706,8 +706,8 @@ main {
     font-size: 16px;
   }
 
-  .retailsectiongrid {
-    grid-template-columns: 1fr;
+  .retailsection {
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
     max-width: 280px;
     margin: 0 auto;

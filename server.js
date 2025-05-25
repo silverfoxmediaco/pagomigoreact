@@ -7,7 +7,7 @@ const cors = require('cors');
 const fs = require('fs');
 const plaidRoutes = require('./routes/plaidRoutes');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5002;
 
 // The build directory should be at the same level as package.json
 // Based on the logs, we're in /opt/render/project/src, so build should be here
