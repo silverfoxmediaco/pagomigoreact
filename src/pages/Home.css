@@ -674,11 +674,16 @@ main {
   
   /* General mobile improvements */
   .hero-section,
-  .retailsection,
+  
   .debit-card-section,
   .features-section {
     width: 100%;
     max-width: 100vw;
+  }
+
+  .retailsection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
   
   h1, h2, h3, p {
