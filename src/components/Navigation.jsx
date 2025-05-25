@@ -117,9 +117,8 @@ const Navigation = () => {
           <li><Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link></li>
           <li><Link to="/moneymover" onClick={() => setIsMenuOpen(false)}>Send/Request Money</Link></li>
           <li><Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link></li>
-          <li><Link to="/settings" onClick={() => setIsMenuOpen(false)}>Settings</Link></li>
+          {/*<li><Link to="/settings" onClick={() => setIsMenuOpen(false)}>Settings</Link></li>*/}
           <li><Link to="/billpay" onClick={() => setIsMenuOpen(false)}>Bill Pay</Link></li>
-          <li><Link to="/banking" onClick={() => setIsMenuOpen(false)}>Banking</Link></li>
           <li id="authMenuItem">
             {isAuthenticated ? (
               <a href="#" className="logout-button" onClick={handleLogout}>Logout</a>

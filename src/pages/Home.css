@@ -683,7 +683,7 @@ main {
 
   .retailsection {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
   
   h1, h2, h3, p {

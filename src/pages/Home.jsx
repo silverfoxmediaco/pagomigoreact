@@ -92,7 +92,7 @@ const Home = () => {
             <button id="signupbtn" onClick={openSignupModal}>Join Now</button>
           </div>
         </div>
-      </main>
+        </main>
 
       <section className="retailsection">
         <h2 className="retailsectionh2">Shop Anywhere Using Pagomigo!</h2>
@@ -185,6 +185,7 @@ const Home = () => {
           </div>
         </div>
       </section>
+      
 
       <SignupModal 
         isOpen={isSignupModalOpen}
