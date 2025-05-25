@@ -23,7 +23,6 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/billpay" element={<Billpay />} />
             <Route path="/moneymover" element={<MoneyMover />} />
-            <Route path="/banking" element={<UnitBanking />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify" element={<SignupVerification />} />
