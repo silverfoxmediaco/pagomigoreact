@@ -1,6 +1,6 @@
 // src/components/SignupModal.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../styles/SignupModal.css';
 import SignupForm from './SignupForm';
 
@@ -120,23 +120,23 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
               <span className="checkbox-checkmark"></span>
               <span className="checkbox-text">
                 I agree to the{' '}
-                <a 
-                  href="/privacy-policy" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="terms-link"
-                >
-                  Privacy Policy
-                </a>
-                {' '}and{' '}
-                <a 
-                  href="/terms-conditions" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="terms-link"
-                >
-                  Terms & Conditions
-                </a>
+                <Link 
+                    to="/privacy" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="terms-link"
+                  >
+                    Privacy Policy
+                  </Link>
+                  {' '}and{' '}
+                  <Link 
+                    to="/terms" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="terms-link"
+                  >
+                    Terms & Conditions
+                  </Link>
               </span>
             </label>
           </div>

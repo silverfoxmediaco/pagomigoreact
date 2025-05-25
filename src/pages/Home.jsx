@@ -85,7 +85,7 @@ const Home = () => {
           <h1 className="heroh1">Envía dinero con inteligencia,<br />seguridad y velocidad.</h1>
           <h2 className="heroh2">The only Digital Wallet You Need.</h2>
           <div className="cta-buttons">
-            <Link to="/dashboard#banking" className="send-cta-button">Send/Request Payment</Link>
+            <Link to="/moneymover" className="send-cta-button">Send/Request Payment</Link>
           </div>
           <div>
             <h3 className="heroh3">Únete ahora para empezar a enviar y recibir dinero.</h3>

@@ -11,6 +11,8 @@ import Login from './pages/Login';
 import Signup from './components/Signup';
 import SignupVerification from './components/SignupVerification';
 import Dashboard from './pages/Dashboard.jsx';
+import Privacy from './pages/Privacy.jsx';
+import Terms from './pages/Terms';
 import './App.css';
 
 function App() {
@@ -26,8 +28,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/verify" element={<SignupVerification />} />
-            <Route path="/terms" element={<div>Terms Page Coming Soon</div>} />
-            <Route path="/privacy" element={<div>Privacy Policy Coming Soon</div>} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={

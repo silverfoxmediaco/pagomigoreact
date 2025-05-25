@@ -8,7 +8,7 @@ import {
   createIdvLinkToken,
   completeIdentityVerification,
   getVerificationStatus
-} from '../services/plaidService';
+} from './plaidService';
 
 export const usePlaid = () => {
   const [accounts, setAccounts] = useState([]);

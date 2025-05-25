@@ -15,8 +15,8 @@ const Footer = () => {
         <img src={pagomigoLogo} alt="Pagomigo Logo" width="100" />
       </div>
       <div className="footer-row footer-links">
-        <Link to="/termsandconditions">Terms & Conditions</Link>
-        <Link to="/privacypolicy">Privacy Policy</Link>
+        <Link to="/terms">Terms & Conditions</Link>
+        <Link to="/privacy">Privacy Policy</Link>
       </div>
       <div className="footer-row footer-copy">
         <p>&copy; {currentYear} Pagomigo.com L.L.C. All rights reserved.</p>

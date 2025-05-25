@@ -80,6 +80,8 @@ export const createIdvLinkToken = async () => {
   });
   
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('IDV Link Token Error:', response.status, errorText);
     throw new Error('Failed to create identity verification link token');
   }
   
