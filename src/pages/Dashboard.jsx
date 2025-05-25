@@ -1,22 +1,29 @@
-// src/pages/Dashboard/index.jsx
+// src/pages/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
-import { useUserProfile } from '../../hooks/useUserProfile';
-import EditProfileModal from './UserProfile/EditProfileModal';
-import Navigation from '../../components/Navigation';
-import PlaidVerification from '../../Plaid/PlaidVerification';
-import PlaidBankingSection from '../../Plaid/PlaidBankingSection';
-import Footer from '../../components/Footer';
-import BankingSection from '../../UnitBanking/BankingSection';
-import ProfileQRCode from '../../ProfileQRCode';
-import styles from '../../styles/Dashboard.module.css';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useUserProfile } from '../hooks/useUserProfile';
+import EditProfileModal from '../components/UserProfile/EditProfileModal';
+import Navigation from '../components/Navigation';
+import PlaidVerification from '../Plaid/PlaidVerification';
+import PlaidBankingSection from '../Plaid/PlaidBankingSection';
+import Footer from '../components/Footer';
+import BankingSection from '../UnitBanking/BankingSection';
+import ProfileQRCode from '../ProfileQRCode';
+import styles from '../styles/Dashboard.module.css';
 
 const Dashboard = () => {
+  // Auth0 integration
+  const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
+  
+  // Your existing hooks
   const { userData, loading, error } = useUserProfile();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSendMoneyModalOpen, setIsSendMoneyModalOpen] = useState(false);
   const [isRequestMoneyModalOpen, setIsRequestMoneyModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('transactions'); // 'transactions' or 'requests'
-  const [unitToken, setUnitToken] = useState("demo.jwt.token"); // Replace with your actual token
+  const [activeTab, setActiveTab] = useState('transactions');
+  
+  // Updated token state
+  const [unitToken, setUnitToken] = useState(null);
 
   // Unit settings for styling
   const unitSettings = {
@@ -36,27 +43,41 @@ const Dashboard = () => {
       designs: [
         {
           name: "default",
-          url: "/images/logodvisacard.png",
+          src: "/images/logodvisacard.png",
           fontColor: "#fafafa"
         }
       ]
     }
   };
 
-  // Add useEffect to fetch Unit JWT token from your backend when ready
+  // Updated useEffect to handle both Auth0 and fallback token
   useEffect(() => {
-    // Example token fetching (uncomment and implement when ready)
-    // const fetchUnitToken = async () => {
-    //   try {
-    //     const response = await fetch('/api/unit/token');
-    //     const data = await response.json();
-    //     setUnitToken(data.token);
-    //   } catch (err) {
-    //     console.error('Failed to fetch Unit token:', err);
-    //   }
-    // };
-    // fetchUnitToken();
-  }, []);
+    const fetchUnitToken = async () => {
+      try {
+        // If Auth0 is authenticated, use Auth0 token
+        if (isAuthenticated) {
+          console.log('Using Auth0 token for Unit Banking');
+          const token = await getAccessTokenSilently();
+          setUnitToken(token);
+          console.log('Auth0 token set for Unit');
+        } else {
+          // Fallback to your existing token system
+          console.log('Auth0 not authenticated, using fallback token system');
+          const response = await fetch('/api/unit/token');
+          const data = await response.json();
+          setUnitToken(data.token);
+          console.log('Fallback token set for Unit');
+        }
+      } catch (err) {
+        console.error('Failed to fetch Unit token:', err);
+        // Ultimate fallback to demo token
+        setUnitToken("demo.jwt.token");
+        console.log('Using demo token as ultimate fallback');
+      }
+    };
+
+    fetchUnitToken();
+  }, [isAuthenticated, getAccessTokenSilently]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -89,6 +110,19 @@ const Dashboard = () => {
     }
   };
 
+  // Show Auth0 loading state
+  if (isLoading) {
+    return (
+      <div className={styles.dashboardContainer}>
+        <Navigation />
+        <main className={styles.dashboardContent}>
+          <div className={styles.dashboardLoading}>Loading authentication...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.dashboardContainer}>
       <Navigation />
@@ -99,6 +133,12 @@ const Dashboard = () => {
           {userData && (
             <div className={styles.welcomeMessage}>
               Welcome back, {userData.name}!
+            </div>
+          )}
+          {/* Auth0 user info if available */}
+          {isAuthenticated && user && (
+            <div className={styles.welcomeMessage} style={{ fontSize: '14px', color: '#666' }}>
+              Auth0 User: {user.email}
             </div>
           )}
         </div>
@@ -185,32 +225,46 @@ const Dashboard = () => {
               </div>
             </section>
 
-          
-          <section className={styles.plaidGrid}>
-          <section className={styles.plaidVerificationSection}>
-            <div className={styles.sectionHeader}>
-              <h2>Plaid Identity Verification</h2>
-            </div>
-            <PlaidVerification />
-          </section>
-          <section className={styles.dashboardCard}>
-            <div className={styles.sectionHeader}>
-              <h2>External Bank Accounts</h2>
-            </div>
-            <PlaidBankingSection />
-          </section>
-        </section>
+            <section className={styles.plaidGrid}>
+              <section id="plaid-verification" className={styles.plaidVerificationSection}>
+                <div className={styles.sectionHeader}>
+                  <h2>Plaid Identity Verification</h2>
+                </div>
+                <PlaidVerification />
+              </section>
+              <section className={styles.dashboardCard}>
+                <div className={styles.sectionHeader}>
+                  <h2>External Bank Accounts</h2>
+                </div>
+                <PlaidBankingSection />
+              </section>
+            </section>
 
-            {/* Unit White Label App Section */}
+            {/* Updated Unit White Label App Section */}
             <section className={styles.dashboardSection}>
               <div className={styles.sectionHeader}>
                 <h2>Banking & Transactions</h2>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                  Token Status: {unitToken ? 'Ready' : 'Loading...'} | 
+                  Auth Method: {isAuthenticated ? 'Auth0' : 'Traditional'}
+                </div>
               </div>
               <div className={styles.unitAppContainer}>
-                <unit-elements-white-label-app
-                  jwt-token={unitToken}
-                  settings-json={JSON.stringify(unitSettings)}
-                ></unit-elements-white-label-app>
+                {unitToken ? (
+                  <unit-elements-white-label-app
+                    jwt-token={unitToken}
+                    settings-json={JSON.stringify(unitSettings)}
+                  ></unit-elements-white-label-app>
+                ) : (
+                  <div style={{ 
+                    padding: '20px', 
+                    textAlign: 'center', 
+                    backgroundColor: '#f5f5f5', 
+                    borderRadius: '8px' 
+                  }}>
+                    Loading banking interface...
+                  </div>
+                )}
               </div>
             </section>
             

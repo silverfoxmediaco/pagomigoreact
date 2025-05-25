@@ -1,7 +1,7 @@
 // src/pages/Home.jsx
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import '../styles/Home.css';
+import './Home.css';
 
 // Import components 
 import Navigation from '../components/Navigation';

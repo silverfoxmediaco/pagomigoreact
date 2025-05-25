@@ -1,0 +1,399 @@
+/* src/pages/BillPay.css */
+@import url('../styles/index.css');
+
+.billpay-page {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+}
+
+.billpay-title {
+  display: block;
+  text-align: center;
+  font-size: 55px;
+  color: #333;
+  margin: 2rem 0;
+  padding-top: 2rem;
+}
+
+.billpay {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 200px);
+  margin-bottom: 60px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Utilities Section */
+.utilities {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  padding: 2rem;
+  background-color: #0033cc;
+  margin-bottom: 20px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.utilities h2 {
+  font-size: 30px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.utilities p {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.utilities-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.utility-item {
+  width: 100%;
+}
+
+.utilitiesbtn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  border: none;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 15px 20px;
+  width: 100%;
+  min-height: 60px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.utilitiesbtn:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.utilitiesbtn img {
+  width: 24px;
+  height: 24px;
+}
+
+/* Rent/Mortgage Section */
+.rentmortgage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  padding: 2rem;
+  background-color: #0033cc;
+  margin-bottom: 20px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.rentmortgage h2 {
+  font-size: 30px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.rentmortgage p {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.rentmortgage-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.rentmortgage-item {
+  width: 100%;
+}
+
+.rentbtn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  border: none;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 15px 20px;
+  width: 100%;
+  min-height: 60px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.rentbtn:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.rentbtn img {
+  width: 24px;
+  height: 24px;
+}
+
+/* Automotive Section */
+.automotive {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  padding: 2rem;
+  background-color: #0033cc;
+  margin-bottom: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  grid-column: 1 / -1; /* Span across both columns */
+}
+
+.automotive h2 {
+  font-size: 30px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.automotive p {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.automotive-list {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 800px;
+  flex-wrap: wrap;
+}
+
+.carloan, .motorcycleloan, .insurance {
+  flex: 1;
+  min-width: 200px;
+}
+
+.autoloan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  border: none;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 100%;
+  min-height: 120px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.autoloan:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.autoloan img {
+  width: 32px;
+  height: 32px;
+}
+
+/* Add this to your BillPay.css file */
+
+.payment-status {
+    max-width: 600px;
+    margin: 0 auto 2rem auto;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 500;
+  }
+  
+  .payment-status.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  
+  .payment-status.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+  
+  /* Disabled button state */
+  .utilitiesbtn:disabled,
+  .rentbtn:disabled,
+  .autoloan:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .utilitiesbtn:disabled:hover,
+  .rentbtn:disabled:hover,
+  .autoloan:disabled:hover {
+    background-color: white;
+    transform: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .billpay-title {
+    font-size: 35px;
+    margin: 1rem 0;
+    padding-top: 1rem;
+  }
+
+  .billpay {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 1rem;
+    margin-bottom: 40px;
+  }
+
+  .utilities,
+  .rentmortgage,
+  .automotive {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 1.5rem;
+  }
+
+  .utilities h2,
+  .rentmortgage h2,
+  .automotive h2 {
+    font-size: 24px;
+  }
+
+  .utilities p,
+  .rentmortgage p,
+  .automotive p {
+    font-size: 16px;
+  }
+
+  .automotive {
+    grid-column: 1; /* Reset column span on mobile */
+  }
+
+  .automotive-list {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .autoloan {
+    min-height: 80px;
+    padding: 15px;
+  }
+
+  .utilitiesbtn,
+  .rentbtn {
+    padding: 12px 15px;
+    min-height: 50px;
+    font-size: 14px;
+  }
+
+  .utilitiesbtn img,
+  .rentbtn img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .autoloan img {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .billpay-title {
+    font-size: 28px;
+  }
+
+  .utilities,
+  .rentmortgage,
+  .automotive {
+    padding: 1rem;
+  }
+
+  .utilities h2,
+  .rentmortgage h2,
+  .automotive h2 {
+    font-size: 22px;
+  }
+
+  .utilities p,
+  .rentmortgage p,
+  .automotive p {
+    font-size: 14px;
+  }
+
+  .utilitiesbtn,
+  .rentbtn,
+  .autoloan {
+    font-size: 13px;
+  }
+}
