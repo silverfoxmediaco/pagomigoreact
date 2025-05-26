@@ -505,6 +505,48 @@ main {
   cursor: pointer;
 }
 
+.retailvision {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-image: url('../assets/womenshopping.png'); /* Replace with your image path */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+.retailvision::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3); /* Dark overlay for text readability */
+  z-index: 1;
+}
+
+.retailpayh2,
+.retaileasierh2 {
+  position: relative;
+  z-index: 2;
+  font-size: 80px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.1s ease-out;
+}
+
+.retailpayh2 {
+  margin-bottom: 1rem;
+}
+
 .site-footer {
   background-color: #f5f7fa;
   padding: 1rem 1rem;
@@ -692,6 +734,16 @@ main {
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
+
+  .retailpayh2,
+  .retaileasierh2 {
+    font-size: 60px;
+  }
+  
+  .retailvision {
+    background-attachment: scroll; /* Fixed backgrounds don't work well on mobile */
+  }
+
 }
 
 /* Very small screens */

@@ -23,6 +23,7 @@ import sendMoney from '../assets/sendmoneyiphone.png';
 import requestMoney from '../assets/requestmoneyiphoneportrait.png';
 import billPay from '../assets/billpayportait.png';
 
+
 const Home = () => {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
 
@@ -48,6 +49,47 @@ const Home = () => {
     // Cleanup function
     return () => {
       animatedElements.forEach(el => observer.unobserve(el));
+    };
+  }, []);
+
+  // Scroll animation effect for retailvision section
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const retailSection = document.querySelector('.retailvision');
+      
+      if (retailSection) {
+        const rect = retailSection.getBoundingClientRect();
+        const sectionTop = rect.top + scrollY;
+        const sectionHeight = rect.height;
+        
+        // Only animate when section is in viewport
+        if (scrollY >= sectionTop - window.innerHeight && scrollY <= sectionTop + sectionHeight) {
+          const payText = document.querySelector('.retailpayh2');
+          const easierText = document.querySelector('.retaileasierh2');
+          
+          // Calculate scroll progress within the section
+          const scrollProgress = (scrollY - (sectionTop - window.innerHeight)) / (window.innerHeight + sectionHeight);
+          
+          if (payText && easierText) {
+            // Move "Pagar" from right to left
+            const payTranslateX = (1 - scrollProgress) * 300 - 150; // Starts at 150px right, ends at -150px left
+            
+            // Move "Más fácil" from left to right  
+            const easierTranslateX = (scrollProgress - 0.5) * 300; // Starts at -150px left, ends at 150px right
+            
+            payText.style.transform = `translateX(${payTranslateX}px)`;
+            easierText.style.transform = `translateX(${easierTranslateX}px)`;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -184,6 +226,12 @@ const Home = () => {
             <p>Pay your bills directly from your Pagomigo wallet, hassle-free.</p>
           </div>
         </div>
+      </section>
+
+      <section className='retailvision'>
+        <h2 className='retailpayh2'>Pagar</h2>
+        <h2 className='retaileasierh2'>Más fácil
+        </h2>
       </section>
       
 

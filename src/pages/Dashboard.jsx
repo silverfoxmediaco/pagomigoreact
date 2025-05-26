@@ -6,6 +6,7 @@ import EditProfileModal from '../components/UserProfile/EditProfileModal';
 import Navigation from '../components/Navigation';
 import PlaidVerification from '../Plaid/PlaidVerification';
 import PlaidBankingSection from '../Plaid/PlaidBankingSection';
+import PersonaVerification from '../Persona/PersonaVerification';
 import Footer from '../components/Footer';
 import BankingSection from '../UnitBanking/BankingSection';
 import ProfileQRCode from '../ProfileQRCode';
@@ -229,8 +230,9 @@ const Dashboard = () => {
               <section id="plaid-verification" className={styles.plaidVerificationSection}>
                 <div className={styles.sectionHeader}>
                   <h2>Plaid Identity Verification</h2>
-                </div>
+                  </div>
                 <PlaidVerification />
+                
               </section>
               <section className={styles.dashboardCard}>
                 <div className={styles.sectionHeader}>
@@ -238,6 +240,17 @@ const Dashboard = () => {
                 </div>
                 <PlaidBankingSection />
               </section>
+            </section>
+
+            {/* Persona ID Verification Section */}
+            <section className={styles.dashboardCard}>
+              <div className={styles.sectionHeader}>
+                <h2>Persona Identity Verification</h2>
+                <p style={{ fontSize: '14px', color: '#666', margin: '5px 0 0 0' }}>
+                  For Central America, South America & Spain
+                </p>
+              </div>
+              <PersonaVerification />
             </section>
 
             {/* Updated Unit White Label App Section */}
