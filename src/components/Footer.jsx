@@ -17,6 +17,7 @@ const Footer = () => {
       <div className="footer-row footer-links">
         <Link to="/terms">Terms & Conditions</Link>
         <Link to="/privacy">Privacy Policy</Link>
+        <Link to="/fees">Fees</Link>
       </div>
       <div className="footer-row footer-copy">
         <p>&copy; {currentYear} Pagomigo.com L.L.C. All rights reserved.</p>

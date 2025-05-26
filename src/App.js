@@ -13,6 +13,7 @@ import SignupVerification from './components/SignupVerification';
 import Dashboard from './pages/Dashboard.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Terms from './pages/Terms';
+import Fees from './pages/Fees';
 import './App.css';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
             <Route path="/verify" element={<SignupVerification />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/fees" element={<Fees Page />} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={
