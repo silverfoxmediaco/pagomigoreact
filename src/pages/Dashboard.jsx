@@ -227,13 +227,14 @@ const Dashboard = () => {
             </section>
 
             <section className={styles.plaidGrid}>
+
+              {/* Plaid Identity Verification Section */}
               <section id="plaid-verification" className={styles.plaidVerificationSection}>
                 <div className={styles.sectionHeader}>
-                  <h2>Plaid Identity Verification</h2>
                   </div>
                 <PlaidVerification />
-                
               </section>
+
               <section className={styles.dashboardCard}>
                 <div className={styles.sectionHeader}>
                   <h2>External Bank Accounts</h2>
@@ -246,9 +247,6 @@ const Dashboard = () => {
             <section className={styles.dashboardCard}>
               <div className={styles.sectionHeader}>
                 <h2>Persona Identity Verification</h2>
-                <p style={{ fontSize: '14px', color: '#666', margin: '5px 0 0 0' }}>
-                  For Central America, South America & Spain
-                </p>
               </div>
               <PersonaVerification />
             </section>

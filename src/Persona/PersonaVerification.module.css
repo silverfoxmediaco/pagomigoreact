@@ -127,9 +127,6 @@
   
   /* Mobile responsiveness */
   @media (max-width: 768px) {
-    .personaVerificationSection {
-      padding: 1rem;
-    }
     
     .supportedRegions ul {
       grid-template-columns: 1fr;
