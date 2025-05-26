@@ -533,7 +533,7 @@ main {
 .retaileasierh2 {
   position: relative;
   z-index: 2;
-  font-size: 80px;
+  font-size: 100px;
   font-weight: bold;
   color: white;
   margin: 0;
@@ -743,11 +743,11 @@ main {
 
   .retailpayh2,
   .retaileasierh2 {
-    font-size: 60px;
+    font-size: 90px;
   }
   
   .retailvision {
-    background-attachment: scroll; /* Fixed backgrounds don't work well on mobile */
+    background-attachment: scroll;
   }
 
 }
