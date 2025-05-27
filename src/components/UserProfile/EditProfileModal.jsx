@@ -11,9 +11,31 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
     phone: '',
     address: ''
   });
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+  
   const { updateProfile, loading, error, success } = useUserProfile();
   const modalRef = useRef(null);
   const phoneInputRef = useRef(null);
+
+  // Handle modal animation states
+  useEffect(() => {
+    if (isOpen) {
+      console.log('Modal opening - starting animation');
+      setShouldRender(true);
+      // Small delay to ensure DOM is ready before starting animation
+      setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+    } else {
+      console.log('Modal closing - starting close animation');
+      setIsAnimating(false);
+      // Wait for animation to complete before unmounting
+      setTimeout(() => {
+        setShouldRender(false);
+      }, 300); // Match the CSS transition duration
+    }
+  }, [isOpen]);
 
   // Initialize form data when userData changes
   useEffect(() => {
@@ -30,7 +52,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
 
   // Initialize intl-tel-input on mount
   useEffect(() => {
-    if (isOpen && phoneInputRef.current) {
+    if (shouldRender && phoneInputRef.current) {
       try {
         // Check if intlTelInput is available
         if (window.intlTelInput) {
@@ -60,7 +82,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
         console.error('Error initializing phone input:', error);
       }
     }
-  }, [isOpen, formData.phone]);
+  }, [shouldRender, formData.phone]);
 
   // Handle click outside modal to close
   useEffect(() => {
@@ -70,14 +92,14 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
       }
     };
 
-    if (isOpen) {
+    if (shouldRender) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onClose]);
+  }, [shouldRender, onClose]);
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -87,14 +109,14 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
       }
     };
 
-    if (isOpen) {
+    if (shouldRender) {
       document.addEventListener('keydown', handleEscKey);
     }
     
     return () => {
       document.removeEventListener('keydown', handleEscKey);
     };
-  }, [isOpen, onClose]);
+  }, [shouldRender, onClose]);
 
   const handleChange = (e) => {
     setFormData({
@@ -105,36 +127,70 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submitted with data:', formData);
     
     // Get formatted phone number from intl-tel-input if available
     let profileData = { ...formData };
     if (phoneInputRef.current && phoneInputRef.current.iti) {
       profileData.phone = phoneInputRef.current.iti.getNumber();
+      console.log('Phone number from intl-tel-input:', profileData.phone);
     }
     
     const result = await updateProfile(profileData);
+    console.log('Update profile result:', result);
     
     if (result.success) {
+      console.log('Profile updated successfully, closing modal');
       onClose();
     }
   };
 
-  if (!isOpen) return null;
+  if (!shouldRender) {
+    console.log('Modal NOT rendering - shouldRender is false');
+    return null;
+  }
+
+  console.log('Modal SHOULD be rendering now!');
+  console.log('Modal props:', { isOpen, shouldRender, isAnimating, userData: !!userData });
+  console.log('CSS styles object:', styles);
+  console.log('Form data:', formData);
 
   return (
-    <div className={styles.editModalOverlay}>
-      <div className={styles.editModalContainer} ref={modalRef}>
-        <div className={styles.editModalHeader}>
-          <h2>Edit Profile</h2>
-          <button className={styles.closeButton} onClick={onClose}>&times;</button>
+    <div 
+      className={styles['edit-profile-overlay']}
+      onClick={() => console.log('Overlay clicked!')}
+    >
+      <div 
+        className={`${styles['edit-profile-container']} ${isAnimating ? styles['slide-up'] : ''}`}
+        ref={modalRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          console.log('Modal container clicked!');
+        }}
+      >
+        <div className={styles['edit-profile-handle']}>
+          <div className={styles['handle-bar']}></div>
         </div>
         
-        <div className={styles.editModalBody}>
-          {error && <div className={styles.errorMessage}>{error}</div>}
-          {success && <div className={styles.successMessage}>{success}</div>}
+        <div className={styles['edit-profile-header']}>
+          <h2>Edit Profile</h2>
+          <button 
+            className={styles['close-button']} 
+            onClick={() => {
+              console.log('Close button clicked');
+              onClose();
+            }}
+          >
+            &times;
+          </button>
+        </div>
+        
+        <div className={styles['edit-profile-body']}>
+          {error && <div className={`${styles.message} ${styles.error}`}>{error}</div>}
+          {success && <div className={`${styles.message} ${styles.success}`}>{success}</div>}
           
           <form onSubmit={handleSubmit}>
-            <div className={styles.formGroup}>
+            <div className={styles['form-group']}>
               <label htmlFor="edit-name">Full Name</label>
               <input
                 type="text"
@@ -146,7 +202,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
               />
             </div>
             
-            <div className={styles.formGroup}>
+            <div className={styles['form-group']}>
               <label htmlFor="edit-username">Username</label>
               <input
                 type="text"
@@ -158,7 +214,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
               />
             </div>
             
-            <div className={styles.formGroup}>
+            <div className={styles['form-group']}>
               <label htmlFor="edit-email">Email</label>
               <input
                 type="email"
@@ -170,7 +226,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
               />
             </div>
             
-            <div className={styles.formGroup}>
+            <div className={styles['form-group']}>
               <label htmlFor="edit-phone">Phone Number</label>
               <input
                 type="tel"
@@ -183,7 +239,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
               />
             </div>
             
-            <div className={styles.formGroup}>
+            <div className={styles['form-group']}>
               <label htmlFor="edit-address">Address</label>
               <input
                 type="text"
@@ -195,17 +251,17 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
               />
             </div>
             
-            <div className={styles.editModalActions}>
+            <div className={styles['form-actions']}>
               <button 
                 type="button" 
-                className={styles.cancelBtn}
+                className={styles['cancel-btn']}
                 onClick={onClose}
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                className={styles.saveBtn}
+                className={styles['save-btn']}
                 disabled={loading}
               >
                 {loading ? 'Saving...' : 'Save Changes'}
