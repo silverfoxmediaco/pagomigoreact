@@ -15,7 +15,7 @@ const Fees = () => {
         <div className="fees-container">
           <div className="fees-header">
             <h1>Pagomigo Fees & Pricing</h1>
-            <p className="fees-subtitle">Transparent pricing designed for the Hispanic community</p>
+            <p className="fees-subtitle">Transparent pricing designed around Trust.</p>
           </div>
 
           {/* Account & Card Services */}
