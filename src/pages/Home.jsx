@@ -172,6 +172,12 @@ const Home = () => {
         </div>
       </section>
 
+      <section className='retailvision'>
+        <h2 className='retailpayh2'>Pagar</h2>
+        <h2 className='retaileasierh2'>Más fácil
+        </h2>
+      </section>
+
       <section className="debit-card-section">
         <div className="debit-card-grid">
           <div className="debit-card-text">
@@ -227,14 +233,7 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      <section className='retailvision'>
-        <h2 className='retailpayh2'>Pagar</h2>
-        <h2 className='retaileasierh2'>Más fácil
-        </h2>
-      </section>
       
-
       <SignupModal 
         isOpen={isSignupModalOpen}
         onClose={closeSignupModal}
