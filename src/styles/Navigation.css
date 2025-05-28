@@ -1,113 +1,172 @@
 /* src/styles/Navigation.css */
 
 .main-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  background-color: white;
+  padding: 1rem 1.5rem;
+  height: 70px;
+  color: white;
+  position: relative;
+  gap: 20px;
+}
+
+.logo {
+  justify-self: start;
+}
+
+.logo img {
+  display: block;
+  width: 120px;
+  height: auto;
+  max-height: 50px;
+}
+
+.logo a {
+  text-decoration: none;
+}
+
+/* Language switcher in the center */
+.language-switcher {
+  justify-self: end;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #0033cc;
+}
+
+.language-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #0033cc;
+  color: white;
+  padding: 3px 10px;
+}
+
+.lang-option {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  transition: color 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.lang-option.active {
+  color: white;
+  text-shadow: 0 0 8px rgba(0, 51, 204, 0.3);
+}
+
+.separator {
+  color: white;
+  font-weight: 300;
+}
+
+.hamburger {
+  justify-self: end;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: block;
+  object-fit: contain;
+}
+
+.close-btn {
+  width: 28px;
+  height: 28px;
+  background-color: white;
+  cursor: pointer;
+  position: absolute;
+  top: 26px;
+  right: 26px;
+}
+
+.slideout-menu {
+  position: fixed;
+  right: -260px;
+  top: 0;
+  width: 250px;
+  height: 100%;
+  background-color: #0033cc;
+  color: white;
+  transition: right 0.3s ease;
+  padding-top: 60px;
+  z-index: 999;
+}
+
+.slideout-menu.open {
+  right: 0;
+}
+
+.slideout-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.slideout-menu li {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.slideout-menu a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.slideout-menu button {
+  background: none;
+  border: none;
+  color: white;
+  font-weight: 500;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  text-align: left;
+  width: 100%;
+}
+
+.slideout-menu button.nav-button {
+  background-color: white;
+  color: #0033cc;
+  padding: 8px 15px;
+  border-radius: 5px;
+  margin-top: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.logout-button {
+  color: #ff3b30;
+}
+
+/* Responsive tweaks */
+@media (min-width: 768px) {
+  .main-header {
+    padding: 1rem 2rem;
+    gap: 30px;
+  }
+
+  .language-toggle {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    background-color: white;
-    padding: 1rem 1.5rem;
-    height: 70px;
-    color: white;
-  }
-  
-  .logo img {
-    display: block;
-    width: 120px;
-    height: auto;
-    max-height: 50px;
-  }
-  
-  .logo a {
-    text-decoration: none;
-  }
-  
-  .hamburger {
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    display: block;
-    object-fit: contain;
-    margin-right: 20px;
-  }
-  
-  .close-btn {
-    width: 28px;
-    height: 28px;
-    background-color: white;
-    cursor: pointer;
-    position: absolute;
-    top: 26px;
-    right: 26px;
-  }
-  
-  .slideout-menu {
-    position: fixed;
-    right: -260px;
-    top: 0;
-    width: 250px;
-    height: 100%;
+    gap: 8px;
     background-color: #0033cc;
     color: white;
-    transition: right 0.3s ease;
-    padding-top: 60px;
-    z-index: 999;
+    padding: 3px 10px;
   }
-  
-  .slideout-menu.open {
-    right: 0;
-  }
-  
-  .slideout-menu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .slideout-menu li {
-    padding: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .slideout-menu a {
-    color: white;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  
-  .slideout-menu button {
-    background: none;
-    border: none;
-    color: white;
-    font-weight: 500;
-    font-size: 16px;
-    cursor: pointer;
-    padding: 0;
-    font-family: 'Poppins', sans-serif;
-    text-align: left;
-    width: 100%;
-  }
-  
-  .slideout-menu button.nav-button {
-    background-color: white;
-    color: #0033cc;
-    padding: 8px 15px;
-    border-radius: 5px;
-    margin-top: 10px;
+
+  .lang-option {
+    font-size: 12px;
     font-weight: 600;
-    text-align: center;
+    color: white;
+    transition: color 0.3s ease;
+    letter-spacing: 0.5px;
   }
-  
-  .logout-button {
-    color: #ff3b30;
-  }
-  
-  /* Responsive tweaks */
-  @media (min-width: 768px) {
-    .main-header {
-      padding: 1rem 2rem;
-    }
-    
-    .hamburger {
-      margin-right: 0;
-    }
-  }
+
+}

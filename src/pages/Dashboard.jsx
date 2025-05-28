@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useUserProfile } from '../hooks/useUserProfile';
+import { useLanguage } from '../context/LanguageContext';
 import EditProfileModal from '../components/UserProfile/EditProfileModal';
 import Navigation from '../components/Navigation';
 import PlaidVerification from '../Plaid/PlaidVerification';
@@ -13,6 +14,8 @@ import ProfileQRCode from '../ProfileQRCode';
 import styles from '../styles/Dashboard.module.css';
 
 const Dashboard = () => {
+  const { t } = useLanguage();
+  
   // Auth0 integration
   const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   
@@ -88,26 +91,26 @@ const Dashboard = () => {
   };
 
   const getVerificationStatus = () => {
-    if (!userData) return 'Unknown';
+    if (!userData) return t('unknown');
     
     if (userData.phone_verified) {
-      return <span className={styles.statusVerified}>Verified</span>;
+      return <span className={styles.statusVerified}>{t('verified')}</span>;
     } else {
-      return <span className={styles.statusUnverified}>Unverified</span>;
+      return <span className={styles.statusUnverified}>{t('unverified')}</span>;
     }
   };
 
   const getKycStatus = () => {
-    if (!userData) return 'Unknown';
+    if (!userData) return t('unknown');
     
     switch (userData.kyc_status) {
       case 'completed':
-        return <span className={styles.statusCompleted}>Completed</span>;
+        return <span className={styles.statusCompleted}>{t('completed')}</span>;
       case 'failed':
-        return <span className={styles.statusFailed}>Failed</span>;
+        return <span className={styles.statusFailed}>{t('failed')}</span>;
       case 'pending':
       default:
-        return <span className={styles.statusPending}>Pending</span>;
+        return <span className={styles.statusPending}>{t('pending')}</span>;
     }
   };
 
@@ -117,7 +120,7 @@ const Dashboard = () => {
       <div className={styles.dashboardContainer}>
         <Navigation />
         <main className={styles.dashboardContent}>
-          <div className={styles.dashboardLoading}>Loading authentication...</div>
+          <div className={styles.dashboardLoading}>{t('loading')} authentication...</div>
         </main>
         <Footer />
       </div>
@@ -130,10 +133,10 @@ const Dashboard = () => {
       
       <main className={styles.dashboardContent}>
         <div className={styles.dashboardHeader}>
-          <h1>Dashboard</h1>
+          <h1>{t('dashboard')}</h1>
           {userData && (
             <div className={styles.welcomeMessage}>
-              Welcome back, {userData.name}!
+              {t('welcomeBack')}, {userData.name}!
             </div>
           )}
           {/* Auth0 user info if available */}
@@ -145,7 +148,7 @@ const Dashboard = () => {
         </div>
         
         {loading && !userData ? (
-          <div className={styles.dashboardLoading}>Loading your dashboard...</div>
+          <div className={styles.dashboardLoading}>{t('loading')} your dashboard...</div>
         ) : error && !userData ? (
           <div className={styles.dashboardError}>
             {error}
@@ -158,12 +161,12 @@ const Dashboard = () => {
             {/* User Profile Section */}
             <section className={styles.dashboardSection}>
               <div className={styles.sectionHeader}>
-                <h2>My Profile</h2>
+                <h2>{t('myProfile')}</h2>
                 <button 
                   className={styles.editProfileBtn}
                   onClick={() => setIsEditModalOpen(true)}
                 >
-                  Edit Profile
+                  {t('editProfile')}
                 </button>
               </div>
               
@@ -180,19 +183,19 @@ const Dashboard = () => {
                       
                       <div className={styles.profileContact}>
                         <div className={styles.contactItem}>
-                          <span className={styles.contactLabel}>Phone:</span>
-                          <span className={styles.contactValue}>{userData?.phone || 'Not provided'}</span>
+                          <span className={styles.contactLabel}>{t('phone')}:</span>
+                          <span className={styles.contactValue}>{userData?.phone || t('notProvided')}</span>
                           <span className={styles.phoneStatus}>{getVerificationStatus()}</span>
                         </div>
                         
                         <div className={styles.contactItem}>
-                          <span className={styles.contactLabel}>Email:</span>
-                          <span className={styles.contactValue}>{userData?.email || 'Not provided'}</span>
+                          <span className={styles.contactLabel}>{t('email')}:</span>
+                          <span className={styles.contactValue}>{userData?.email || t('notProvided')}</span>
                         </div>
                         
                         <div className={styles.contactItem}>
-                          <span className={styles.contactLabel}>Address:</span>
-                          <span className={styles.contactValue}>{userData?.address || 'Not provided'}</span>
+                          <span className={styles.contactLabel}>{t('address')}:</span>
+                          <span className={styles.contactValue}>{userData?.address || t('notProvided')}</span>
                         </div>
                       </div>
                     </div>
@@ -202,22 +205,22 @@ const Dashboard = () => {
                 <div className={styles.dashboardCard}>
                   <div className={styles.accountInfo}>
                     <div className={styles.accountBalance}>
-                      <h3>Account Balance</h3>
+                      <h3>{t('accountBalance')}</h3>
                       <div className={styles.balanceAmount}>{userData ? formatCurrency(userData.balance) : '$0.00'}</div>
                     </div>
                     
                     <div className={styles.accountStatus}>
                       <div className={styles.statusItem}>
-                        <span className={styles.statusLabel}>KYC Status:</span>
+                        <span className={styles.statusLabel}>{t('kycStatus')}:</span>
                         {getKycStatus()}
                       </div>
                       
                       <div className={styles.statusItem}>
-                        <span className={styles.statusLabel}>Account Created:</span>
+                        <span className={styles.statusLabel}>{t('accountCreated')}:</span>
                         <span className={styles.statusValue}>
                           {userData?.createdAt 
                             ? new Date(userData.createdAt).toLocaleDateString()
-                            : 'Unknown'}
+                            : t('unknown')}
                         </span>
                       </div>
                     </div>
@@ -256,7 +259,7 @@ const Dashboard = () => {
               <div className={styles.sectionHeader}>
                 <h2>Banking & Transactions</h2>
                 <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                  Token Status: {unitToken ? 'Ready' : 'Loading...'} | 
+                  Token Status: {unitToken ? 'Ready' : t('loading') + '...'} | 
                   Auth Method: {isAuthenticated ? 'Auth0' : 'Traditional'}
                 </div>
               </div>
@@ -273,7 +276,7 @@ const Dashboard = () => {
                     backgroundColor: '#f5f5f5', 
                     borderRadius: '8px' 
                   }}>
-                    Loading banking interface...
+                    {t('loading')} banking interface...
                   </div>
                 )}
               </div>

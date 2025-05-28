@@ -1,5 +1,6 @@
 // src/pages/BillPay.jsx
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import './BillPay.css';
@@ -17,6 +18,7 @@ import insuranceIcon from '../assets/car_crash_24dp_000000_FILL0_wght400_GRAD0_o
 import { useAuth } from '../context/AuthContext';
 
 const BillPay = () => {
+  const { t } = useLanguage();
   const { user } = useAuth(); // Get current user
   const [loading, setLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
@@ -24,7 +26,7 @@ const BillPay = () => {
   // UPDATED HANDLEPAYMENT FUNCTION WITH UNIT API INTEGRATION
   const handlePayment = async (paymentType) => {
     if (!user) {
-      alert('Please log in to make payments');
+      alert(t('pleaseLogInToMakePayments') || 'Please log in to make payments');
       return;
     }
 
@@ -52,16 +54,16 @@ const BillPay = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setPaymentStatus(`${paymentType} payment successful!`);
+        setPaymentStatus(`${paymentType} ${t('paymentSuccessful') || 'payment successful'}!`);
         console.log('Payment successful:', result);
         // Optionally redirect or update UI
       } else {
-        throw new Error(result.message || 'Payment failed');
+        throw new Error(result.message || t('paymentFailed') || 'Payment failed');
       }
 
     } catch (error) {
       console.error('Payment failed:', error);
-      setPaymentStatus(`Payment failed: ${error.message}`);
+      setPaymentStatus(`${t('paymentFailed') || 'Payment failed'}: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -72,11 +74,11 @@ const BillPay = () => {
       <Navigation />
       
       <div className="billpay-page">
-        <h1 className="billpay-title">Bill Pay</h1>
+        <h1 className="billpay-title">{t('billPayTitle')}</h1>
         
         {/* Payment Status Messages */}
         {paymentStatus && (
-          <div className={`payment-status ${paymentStatus.includes('failed') ? 'error' : 'success'}`}>
+          <div className={`payment-status ${paymentStatus.includes('failed') || paymentStatus.includes('falló') ? 'error' : 'success'}`}>
             {paymentStatus}
           </div>
         )}
@@ -84,8 +86,8 @@ const BillPay = () => {
         <main className="billpay">
           {/* Utilities Section */}
           <section className="utilities">
-            <h2>Utilities</h2>
-            <p>Pay your utilities with ease.</p>
+            <h2>{t('utilities')}</h2>
+            <p>{t('utilitiesDesc')}</p>
             <div className="utilities-list">
               <div className="utility-item">
                 <button 
@@ -94,7 +96,7 @@ const BillPay = () => {
                   disabled={loading}
                 >
                   <img src={electricIcon} alt="Electricity" />
-                  <span>{loading ? 'Processing...' : 'Pay Electricity'}</span>
+                  <span>{loading ? t('processing') : t('payElectricity')}</span>
                 </button>
               </div>
               
@@ -105,7 +107,7 @@ const BillPay = () => {
                   disabled={loading}
                 >
                   <img src={waterIcon} alt="Water" />
-                  <span>{loading ? 'Processing...' : 'Pay Water'}</span>
+                  <span>{loading ? t('processing') : t('payWater')}</span>
                 </button>
               </div>
               
@@ -116,7 +118,7 @@ const BillPay = () => {
                   disabled={loading}
                 >
                   <img src={wifiIcon} alt="Internet" />
-                  <span>{loading ? 'Processing...' : 'Pay Internet'}</span>
+                  <span>{loading ? t('processing') : t('payInternet')}</span>
                 </button>
               </div>
               
@@ -127,7 +129,7 @@ const BillPay = () => {
                   disabled={loading}
                 >
                   <img src={gasIcon} alt="Gas" />
-                  <span>{loading ? 'Processing...' : 'Pay Gas'}</span>
+                  <span>{loading ? t('processing') : t('payGas')}</span>
                 </button>
               </div>
             </div>
@@ -135,8 +137,8 @@ const BillPay = () => {
 
           {/* Rent/Mortgage Section */}
           <section className="rentmortgage">
-            <h2>Rent / Mortgage</h2>
-            <p>Pay your rent or mortgage securely and on time.</p>
+            <h2>{t('rentMortgage')}</h2>
+            <p>{t('rentMortgageDesc')}</p>
             <div className="rentmortgage-list">
               <div className="rentmortgage-item">
                 <button 
@@ -145,7 +147,7 @@ const BillPay = () => {
                   disabled={loading}
                 >
                   <img src={houseIcon} alt="House" />
-                  <span>{loading ? 'Processing...' : 'Pay Mortgage'}</span>
+                  <span>{loading ? t('processing') : t('payMortgage')}</span>
                 </button>
               </div>
               
@@ -156,7 +158,7 @@ const BillPay = () => {
                   disabled={loading}
                 >
                   <img src={apartmentIcon} alt="Apartment" />
-                  <span>{loading ? 'Processing...' : 'Pay Rent'}</span>
+                  <span>{loading ? t('processing') : t('payRent')}</span>
                 </button>
               </div>
             </div>
@@ -164,8 +166,8 @@ const BillPay = () => {
 
           {/* Automotive Section */}
           <section className="automotive">
-            <h2>Car / Truck Loan</h2>
-            <p>Manage your automotive loans & Insurance with ease.</p>
+            <h2>{t('carTruckLoan')}</h2>
+            <p>{t('automotiveDesc')}</p>
             <div className="automotive-list">
               <div className="carloan">
                 <button 
@@ -174,7 +176,7 @@ const BillPay = () => {
                   disabled={loading}
                 >
                   <img src={carIcon} alt="Car" />
-                  <span>{loading ? 'Processing...' : 'Pay Auto Loan'}</span>
+                  <span>{loading ? t('processing') : t('payAutoLoan')}</span>
                 </button>
               </div>
 
@@ -185,7 +187,7 @@ const BillPay = () => {
                   disabled={loading}
                 >
                   <img src={motorcycleIcon} alt="Motorcycle" />
-                  <span>{loading ? 'Processing...' : 'Pay Bike Loan'}</span>
+                  <span>{loading ? t('processing') : t('payBikeLoan')}</span>
                 </button>
               </div>
               
@@ -196,7 +198,7 @@ const BillPay = () => {
                   disabled={loading}
                 >
                   <img src={insuranceIcon} alt="Insurance" />
-                  <span>{loading ? 'Processing...' : 'Pay Insurance'}</span>
+                  <span>{loading ? t('processing') : t('payInsurance')}</span>
                 </button>
               </div>
             </div>

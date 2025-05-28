@@ -14,10 +14,12 @@ import Dashboard from './pages/Dashboard.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Terms from './pages/Terms';
 import Fees from './pages/Fees';
+import { LanguageProvider } from './context/LanguageContext';
 import './App.css';
 
 function App() {
   return (
+    <LanguageProvider>
     <AuthProvider>
       <BrowserRouter>
         <div className="App">
@@ -46,6 +48,7 @@ function App() {
         </div>
       </BrowserRouter>
     </AuthProvider>
+    </LanguageProvider>
   );
 }
 

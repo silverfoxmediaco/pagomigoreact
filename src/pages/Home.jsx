@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
+import { useLanguage } from '../context/LanguageContext';
 
 // Import components 
 import Navigation from '../components/Navigation';
@@ -25,6 +26,7 @@ import billPay from '../assets/billpayportait.png';
 
 
 const Home = () => {
+  const { t } = useLanguage();
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
 
   // Debug effect for state changes
@@ -124,20 +126,20 @@ const Home = () => {
           </video>
         </div>
         <div className="hero-text">
-          <h1 className="heroh1">Envía dinero con inteligencia,<br />seguridad y velocidad.</h1>
-          <h2 className="heroh2">The only Digital Wallet You Need.</h2>
+          <h1 className="heroh1">{t('heroTitle')}</h1>
+          <h2 className="heroh2">{t('heroSubtitle')}</h2>
           <div className="cta-buttons">
-            <Link to="/moneymover" className="send-cta-button">Send/Request Payment</Link>
+            <Link to="/moneymover" className="send-cta-button">{t('sendRequestCTA')}</Link>
           </div>
           <div>
-            <h3 className="heroh3">Únete ahora para empezar a enviar y recibir dinero.</h3>
-            <button id="signupbtn" onClick={openSignupModal}>Join Now</button>
+            <h3 className="heroh3">{t('joinMessage')}</h3>
+            <button id="signupbtn" onClick={openSignupModal}>{t('joinNowCTA')}</button>
           </div>
         </div>
-        </main>
+      </main>
 
       <section className="retailsection">
-        <h2 className="retailsectionh2">Shop Anywhere Using Pagomigo!</h2>
+        <h2 className="retailsectionh2">{t('shopAnywhere')}</h2>
         <div className="retailsectiongrid">
           <div className="retailitem">
             <div className="retailimagecontainer">
@@ -173,30 +175,29 @@ const Home = () => {
       </section>
 
       <section className='retailvision'>
-        <h2 className='retailpayh2'>Pagar</h2>
-        <h2 className='retaileasierh2'>Más fácil
-        </h2>
+      <h2 className='retailpayh2'>{t('pay')}</h2>
+        <h2 className='retaileasierh2'>{t('Easier')}</h2>
       </section>
 
       <section className="debit-card-section">
         <div className="debit-card-grid">
           <div className="debit-card-text">
-            <h2>Use Your Pagomigo Debit Card Anywhere</h2>
+            <h2>{t('debitCardTitle')}</h2>
             <img src={visaRoot} alt="pagomigo visa root" className="visa" />
-            <p>Shop online or in-store, pay bills, and access your money instantly with your Pagomigo debit card. Your card is accepted wherever Mastercard or Visa is accepted.</p>
+            <p>{t('debitCardDesc')}</p>
       
             <div className="features-list">
               <div className="feature-item">
-                <h3>Instant Access</h3>
-                <p>Use your card to make purchases or withdraw cash from ATMs across the U.S.</p>
+                <h3>{t('instantAccess')}</h3>
+                <p>{t('instantAccessDesc')}</p>
               </div>
               <div className="feature-item">
-                <h3>Touchless Payments</h3>
-                <p>Scan a QR code or tap your phone to pay securely using NFC technology.</p>
+                <h3>{t('touchlessPayments')}</h3>
+                <p>{t('touchlessPaymentsDesc')}</p>
               </div>
               <div className="feature-item">
-                <h3>Bill Pay</h3>
-                <p>Pay utility bills, rent, and more directly from your Pagomigo wallet.</p>
+                <h3>{t('billPayFeature')}</h3>
+                <p>{t('billPayFeatureDesc')}</p>
               </div>
             </div>
           </div>
@@ -208,28 +209,28 @@ const Home = () => {
       </section>
 
       <section className="features-section">
-        <h2 className="featuresh2">Features</h2>
+        <h2 className="featuresh2">{t('features')}</h2>
         <div className="features-grid">
           <div className="feature-item">
             <Link to="/moneymover">
               <img src={sendMoney} alt="Send Money Icon" />
             </Link>
-            <h3>Send Money</h3>
-            <p>Send money to friends and family instantly, no matter where they are.</p>
+            <h3>{t('sendMoney')}</h3>
+            <p>{t('sendMoneyDesc')}</p>
           </div>
           <div className="feature-item">
             <Link to="/moneymover">
               <img src={requestMoney} alt="Request Money Icon" />
             </Link>
-            <h3>Request Money</h3>
-            <p>Request money from anyone, anywhere, with just a few taps.</p>
+            <h3>{t('requestMoney')}</h3>
+            <p>{t('requestMoneyDesc')}</p>
           </div>
           <div className="feature-item">
             <Link to="/billpay">
               <img src={billPay} alt="Pay Bills Icon" />
             </Link>
-            <h3>Pay Bills</h3>
-            <p>Pay your bills directly from your Pagomigo wallet, hassle-free.</p>
+            <h3>{t('payBills')}</h3>
+            <p>{t('payBillsDesc')}</p>
           </div>
         </div>
       </section>

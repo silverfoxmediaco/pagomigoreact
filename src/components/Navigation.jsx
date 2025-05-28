@@ -1,6 +1,8 @@
 // src/components/Navigation.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import '../styles/Navigation.css';
 
 // Import your images - Update paths as needed
@@ -11,6 +13,7 @@ import closeIcon from '../assets/closeicon.svg';
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { t } = useLanguage();
   const navigate = useNavigate();
   
   // Check for token on component mount
@@ -97,6 +100,10 @@ const Navigation = () => {
           <img src={pagomigoLogo} id="logo" alt="pagomigologo" />
         </Link>
       </div>
+      
+      {/* Language Switcher - positioned between logo and hamburger */}
+      <LanguageSwitcher />
+      
       <img 
         src={menuIcon} 
         alt="Menu" 
@@ -114,21 +121,20 @@ const Navigation = () => {
           onClick={() => setIsMenuOpen(false)}
         />
         <ul id="navList">
-          <li><Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link></li>
-          <li><Link to="/moneymover" onClick={() => setIsMenuOpen(false)}>Send/Request Money</Link></li>
-          <li><Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link></li>
-          {/*<li><Link to="/settings" onClick={() => setIsMenuOpen(false)}>Settings</Link></li>*/}
-          <li><Link to="/billpay" onClick={() => setIsMenuOpen(false)}>Bill Pay</Link></li>
+          <li><Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>{t('dashboard')}</Link></li>
+          <li><Link to="/moneymover" onClick={() => setIsMenuOpen(false)}>{t('sendRequest')}</Link></li>
+          <li><Link to="/" onClick={() => setIsMenuOpen(false)}>{t('home')}</Link></li>
+          <li><Link to="/billpay" onClick={() => setIsMenuOpen(false)}>{t('billPay')}</Link></li>
           <li id="authMenuItem">
             {isAuthenticated ? (
-              <a href="#" className="logout-button" onClick={handleLogout}>Logout</a>
+              <a href="#" className="logout-button" onClick={handleLogout}>{t('logout')}</a>
             ) : (
-              <Link to="/login" onClick={() => setIsMenuOpen(false)}>Login</Link>
+              <Link to="/login" onClick={() => setIsMenuOpen(false)}>{t('login')}</Link>
             )}
           </li>
           {!isAuthenticated && (
             <li>
-              <button className="nav-button" onClick={openSignupModal}>Sign Up</button>
+              <button className="nav-button" onClick={openSignupModal}>{t('signup')}</button>
             </li>
           )}
         </ul>
