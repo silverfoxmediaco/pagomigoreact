@@ -784,8 +784,7 @@ html {
   
   .retailpayh2,
   .retaileasierh2 {
-    font-size: 60px;
-    /* Reduce parallax intensity on mobile for better performance */
+    font-size: 80px;
     transition: transform 0.2s ease-out;
   }
 }
