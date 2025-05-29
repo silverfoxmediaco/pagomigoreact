@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [verificationSent, setVerificationSent] = useState(false);
   const [phoneForVerification, setPhoneForVerification] = useState('');
+  const [pendingUserData, setPendingUserData] = useState(null); // Store user data during verification
 
   // Check for existing token on mount
   useEffect(() => {
@@ -53,37 +54,26 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Register function
+  // Register function - now uses Twilio verification
   const register = async (userData) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${API_BASE}/api/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userData)
-      });
+      // Store user data for after verification
+      setPendingUserData(userData);
       
-      const data = await response.json();
+      // Send SMS verification using Twilio
+      const verificationResult = await sendVerificationCode(userData.phone);
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-      
-      // Check if we're in test mode (verification bypassed)
-      if (data.testMode && data.token) {
-        localStorage.setItem('token', data.token);
-        setIsAuthenticated(true);
-        return { success: true, testMode: true };
-      } else {
-        // Store phone for verification step
+      if (verificationResult.success) {
         setPhoneForVerification(userData.phone);
         setVerificationSent(true);
         return { success: true, verificationNeeded: true };
+      } else {
+        return { success: false, error: verificationResult.error };
       }
+      
     } catch (err) {
       setError(err.message);
       return { success: false, error: err.message };
@@ -92,24 +82,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Send verification code
+  // Send verification code using NEW Twilio endpoint
   const sendVerificationCode = async (phone) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${API_BASE}/api/auth/send-verification`, {
+      // Call your NEW Twilio endpoint
+      const response = await fetch(`${API_BASE}/api/sms/send-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ phone })
+        body: JSON.stringify({ phoneNumber: phone }) // Note: phoneNumber not phone
       });
       
       const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to send verification code');
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send verification code');
       }
       
       setPhoneForVerification(phone);
@@ -123,7 +114,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Verify code
+  // Verify code using NEW Twilio endpoint
   const verifyCode = async (code) => {
     try {
       setLoading(true);
@@ -133,30 +124,48 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Phone number not found');
       }
       
-      const response = await fetch(`${API_BASE}/api/auth/verify-code`, {
+      // Call your NEW Twilio verification endpoint
+      const response = await fetch(`${API_BASE}/api/sms/verify-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          phone: phoneForVerification,
-          code
+          phoneNumber: phoneForVerification, // Note: phoneNumber not phone
+          code: code
         })
       });
       
       const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Verification failed');
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Verification failed');
       }
       
-      // Store token and set authenticated state
-      localStorage.setItem('token', data.token);
-      setIsAuthenticated(true);
-      setVerificationSent(false);
-      setPhoneForVerification('');
+      if (!data.verified) {
+        throw new Error('Invalid verification code');
+      }
       
-      return { success: true };
+      // Now that phone is verified, create the user account
+      if (pendingUserData) {
+        const accountResult = await createUserAccount(pendingUserData);
+        if (accountResult.success) {
+          // Store token and set authenticated state
+          localStorage.setItem('token', accountResult.token);
+          setUser(accountResult.user);
+          setIsAuthenticated(true);
+          setVerificationSent(false);
+          setPhoneForVerification('');
+          setPendingUserData(null);
+          
+          return { success: true };
+        } else {
+          throw new Error(accountResult.error || 'Failed to create account');
+        }
+      } else {
+        throw new Error('User data not found');
+      }
+      
     } catch (err) {
       setError(err.message);
       return { success: false, error: err.message };
@@ -165,7 +174,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login function
+  // Create user account after verification (you'll need this endpoint in your backend)
+  const createUserAccount = async (userData) => {
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...userData,
+          phoneVerified: true // Mark phone as verified
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Account creation failed');
+      }
+      
+      return { success: true, token: data.token, user: data.user };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Login function (unchanged)
   const login = async (credentials) => {
     try {
       setLoading(true);
@@ -200,7 +235,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function
+  // Logout function (unchanged)
   const logout = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -218,16 +253,12 @@ export const AuthProvider = ({ children }) => {
       // Always clear local state regardless of server response
       localStorage.removeItem('token');
       
-      // Unit cleanup (uncomment when using production tokens)
-      // localStorage.removeItem('unitCustomerToken');
-      // localStorage.removeItem('unitVerifiedCustomerToken');
-      
       setUser(null);
       setIsAuthenticated(false);
     }
   };
 
-  // Get user profile
+  // Get user profile (unchanged)
   const getUserProfile = async () => {
     try {
       setLoading(true);
