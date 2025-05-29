@@ -27,7 +27,6 @@
   text-decoration: none;
 }
 
-/* Language switcher in the center */
 .language-switcher {
   justify-self: end;
   border: none;
@@ -72,6 +71,7 @@
   cursor: pointer;
   display: block;
   object-fit: contain;
+  margin-left: 20px;
 }
 
 .close-btn {
@@ -145,11 +145,42 @@
   color: #ff3b30;
 }
 
+/* Mobile styles - screens smaller than 768px */
+@media (max-width: 767px) {
+  .language-switcher {
+    background-color: transparent;
+    
+  }
+
+  .language-toggle {
+    background-color: transparent;
+    color: #0033cc;
+  }
+
+  .lang-option {
+    color: #0033cc;
+  }
+
+  .lang-option.active {
+    color: #0033cc;
+    text-shadow: 0 0 8px rgba(0, 51, 204, 0.3);
+  }
+
+  .separator {
+    color: #0033cc;
+  }
+}
+
 /* Responsive tweaks */
-@media (min-width: 768px) {
+@media (min-width: 767px) {
   .main-header {
     padding: 1rem 2rem;
-    gap: 30px;
+    gap: 20px;
+  }
+
+  .language-switcher {
+    justify-self: end;
+    border: none;
   }
 
   .language-toggle {
@@ -164,7 +195,7 @@
   .lang-option {
     font-size: 12px;
     font-weight: 600;
-    color: white;
+    color: rgb(18, 251, 18);
     transition: color 0.3s ease;
     letter-spacing: 0.5px;
   }
