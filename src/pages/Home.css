@@ -747,7 +747,7 @@ main {
   }
   
   .retailvision {
-    background-attachment: scroll;
+    background-attachment: fixed;
   }
 
 }
