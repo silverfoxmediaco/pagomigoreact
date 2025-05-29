@@ -503,6 +503,7 @@ main {
   cursor: pointer;
 }
 
+/* UPDATED PARALLAX SECTION */
 .retailvision {
   position: relative;
   height: 100vh;
@@ -511,11 +512,14 @@ main {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-image: url('../assets/womenshopping.png'); /* Replace with your image path */
+  background-image: url('../assets/womenshopping.png');
   background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
   background-repeat: no-repeat;
+  background-position: top center; 
+  will-change: transform, background-position; 
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .retailvision::before {
@@ -525,7 +529,7 @@ main {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3); /* Dark overlay for text readability */
+  background: rgba(0, 0, 0, 0.3); 
   z-index: 1;
 }
 
@@ -538,6 +542,8 @@ main {
   color: white;
   margin: 0;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  will-change: transform;
+  backface-visibility: hidden;
   transition: transform 0.1s ease-out;
 }
 
@@ -588,6 +594,32 @@ main {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Performance optimizations for all parallax elements */
+.parallax-element {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Smooth scrolling for the entire page (optional) */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .retailpayh2,
+  .retaileasierh2 {
+    transform: none !important;
+  }
+  
+  .retailvision {
+    background-attachment: scroll;
+    background-position: center center !important;
   }
 }
 
@@ -724,7 +756,6 @@ main {
   
   /* General mobile improvements */
   .hero-section,
-  
   .debit-card-section,
   .features-section {
     width: 100%;
@@ -741,16 +772,22 @@ main {
     overflow-wrap: break-word;
   }
 
-  .retailpayh2,
-  .retaileasierh2 {
-    font-size: 90px;
+  /* MOBILE PARALLAX SECTION */
+  .retailvision {
+    /* Ensure good performance on mobile */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    /* Adjust background size for mobile if needed */
+    background-size: cover;
+    background-position: center;
   }
   
-  .retailvision {
-    background-attachment: scroll;
-    
+  .retailpayh2,
+  .retaileasierh2 {
+    font-size: 60px;
+    /* Reduce parallax intensity on mobile for better performance */
+    transition: transform 0.2s ease-out;
   }
-
 }
 
 /* Very small screens */
@@ -791,5 +828,10 @@ main {
   
   .featuresh2 {
     font-size: 22px;
+  }
+
+  .retailpayh2,
+  .retaileasierh2 {
+    font-size: 45px;
   }
 }

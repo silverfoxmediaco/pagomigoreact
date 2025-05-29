@@ -24,7 +24,6 @@ import sendMoney from '../assets/sendmoneyiphone.png';
 import requestMoney from '../assets/requestmoneyiphoneportrait.png';
 import billPay from '../assets/billpayportait.png';
 
-
 const Home = () => {
   const { t } = useLanguage();
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
@@ -54,40 +53,52 @@ const Home = () => {
     };
   }, []);
 
-  // Scroll animation effect for retailvision section
+  // Enhanced scroll animation effect for retailvision section with parallax background
   useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const retailSection = document.querySelector('.retailvision');
-      
-      if (retailSection) {
-        const rect = retailSection.getBoundingClientRect();
-        const sectionTop = rect.top + scrollY;
-        const sectionHeight = rect.height;
-        
-        // Only animate when section is in viewport
-        if (scrollY >= sectionTop - window.innerHeight && scrollY <= sectionTop + sectionHeight) {
-          const payText = document.querySelector('.retailpayh2');
-          const easierText = document.querySelector('.retaileasierh2');
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          const retailSection = document.querySelector('.retailvision');
           
-          // Calculate scroll progress within the section
-          const scrollProgress = (scrollY - (sectionTop - window.innerHeight)) / (window.innerHeight + sectionHeight);
-          
-          if (payText && easierText) {
-            // Move "Pagar" from right to left
-            const payTranslateX = (1 - scrollProgress) * 300 - 150; // Starts at 150px right, ends at -150px left
+          if (retailSection) {
+            const rect = retailSection.getBoundingClientRect();
+            const sectionTop = rect.top + scrollY;
+            const sectionHeight = rect.height;
             
-            // Move "Más fácil" from left to right  
-            const easierTranslateX = (scrollProgress - 0.5) * 300; // Starts at -150px left, ends at 150px right
+            // Only animate when section is in viewport
+            if (scrollY >= sectionTop - window.innerHeight && scrollY <= sectionTop + sectionHeight) {
+              const payText = document.querySelector('.retailpayh2');
+              const easierText = document.querySelector('.retaileasierh2');
+              
+              // Calculate scroll progress within the section
+              const scrollProgress = (scrollY - (sectionTop - window.innerHeight)) / (window.innerHeight + sectionHeight);
+              
+              if (payText && easierText) {
+                // Move "Pagar" from right to left
+                const payTranslateX = (1 - scrollProgress) * 300 - 150;
+                
+                // Move "Más fácil" from left to right  
+                const easierTranslateX = (scrollProgress - 0.5) * 300;
+                
+                payText.style.transform = `translateX(${payTranslateX}px)`;
+                easierText.style.transform = `translateX(${easierTranslateX}px)`;
+              }
+
             
-            payText.style.transform = `translateX(${payTranslateX}px)`;
-            easierText.style.transform = `translateX(${easierTranslateX}px)`;
+            const backgroundOffset = scrollY * -0.1; 
+            retailSection.style.backgroundPosition = `50% ${backgroundOffset}px`;
+            }
           }
-        }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
     // Clean up event listener
     return () => {
@@ -174,8 +185,9 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Simple parallax section - no complex hooks needed */}
       <section className='retailvision'>
-      <h2 className='retailpayh2'>{t('pay')}</h2>
+        <h2 className='retailpayh2'>{t('pay')}</h2>
         <h2 className='retaileasierh2'>{t('Easier')}</h2>
       </section>
 
