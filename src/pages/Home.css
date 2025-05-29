@@ -610,19 +610,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-  .retailpayh2,
-  .retaileasierh2 {
-    transform: none !important;
-  }
-  
-  .retailvision {
-    background-attachment: scroll;
-    background-position: center center !important;
-  }
-}
-
 /* MOBILE RESPONSIVE STYLES - COMBINED */
 @media (max-width: 768px) {
   main {
@@ -789,48 +776,3 @@ html {
   }
 }
 
-/* Very small screens */
-@media (max-width: 480px) {
-  .heroh1 {
-    font-size: 28px;
-  }
-  
-  .heroh2 {
-    font-size: 20px;
-  }
-  
-  .heroh3 {
-    font-size: 16px;
-  }
-
-  .retailsection {
-    grid-template-columns: 1fr;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    gap: 0px;
-    width: 90%;
-    margin-top: 40px;
-    margin-bottom: 40px;
-    margin-left: 20px;
-    margin-right: 10px;
-  }
-  
-  .retailsectionh2 {
-    font-size: 24px;
-    padding: 0 10px;
-  }
-
-  .feature-item img {
-    width: 120px;
-  }
-  
-  .featuresh2 {
-    font-size: 22px;
-  }
-
-  .retailpayh2,
-  .retaileasierh2 {
-    font-size: 45px;
-  }
-}
