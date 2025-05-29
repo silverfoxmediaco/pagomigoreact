@@ -506,16 +506,16 @@ main {
 /* UPDATED PARALLAX SECTION */
 .retailvision {
   position: relative;
-  height: 100vh;
+  height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-image: url('../assets/womenshopping.png');
+  background-image: url('../assets/largeimagewomenshopping.png');
   background-size: cover;
   background-repeat: no-repeat;
-  background-position: top center; 
+  background-position: center; 
   will-change: transform, background-position; 
   backface-visibility: hidden;
   -webkit-transform: translateZ(0);
@@ -774,12 +774,12 @@ html {
 
   /* MOBILE PARALLAX SECTION */
   .retailvision {
-    /* Ensure good performance on mobile */
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
-    /* Adjust background size for mobile if needed */
     background-size: cover;
     background-position: center;
+    background-image: url('../assets/womenshoppingmobileimg.png'); 
+    height: 70vh;
   }
   
   .retailpayh2,

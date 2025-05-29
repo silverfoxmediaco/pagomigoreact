@@ -54,57 +54,60 @@ const Home = () => {
   }, []);
 
   // Enhanced scroll animation effect for retailvision section with parallax background
-  useEffect(() => {
-    let ticking = false;
+useEffect(() => {
+  let ticking = false;
 
-    const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-          const retailSection = document.querySelector('.retailvision');
+  const handleScroll = () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        const retailSection = document.querySelector('.retailvision');
+        
+        if (retailSection) {
+          const rect = retailSection.getBoundingClientRect();
+          const sectionTop = rect.top + scrollY;
+          const sectionHeight = rect.height;
           
-          if (retailSection) {
-            const rect = retailSection.getBoundingClientRect();
-            const sectionTop = rect.top + scrollY;
-            const sectionHeight = rect.height;
+          // Only animate when section is in viewport
+          if (scrollY >= sectionTop - window.innerHeight && scrollY <= sectionTop + sectionHeight) {
+            const payText = document.querySelector('.retailpayh2');
+            const easierText = document.querySelector('.retaileasierh2');
             
-            // Only animate when section is in viewport
-            if (scrollY >= sectionTop - window.innerHeight && scrollY <= sectionTop + sectionHeight) {
-              const payText = document.querySelector('.retailpayh2');
-              const easierText = document.querySelector('.retaileasierh2');
-              
-              // Calculate scroll progress within the section
-              const scrollProgress = (scrollY - (sectionTop - window.innerHeight)) / (window.innerHeight + sectionHeight);
-              
-              if (payText && easierText) {
-                // Move "Pagar" from right to left
-                const payTranslateX = (1 - scrollProgress) * 300 - 150;
-                
-                // Move "Más fácil" from left to right  
-                const easierTranslateX = (scrollProgress - 0.5) * 300;
-                
-                payText.style.transform = `translateX(${payTranslateX}px)`;
-                easierText.style.transform = `translateX(${easierTranslateX}px)`;
-              }
-
+            // Calculate scroll progress within the section
+            const scrollProgress = (scrollY - (sectionTop - window.innerHeight)) / (window.innerHeight + sectionHeight);
             
-            const backgroundOffset = scrollY * -0.1; 
-            retailSection.style.backgroundPosition = `50% ${backgroundOffset}px`;
+            if (payText && easierText) {
+              // Move "Pagar" from right to left
+              const payTranslateX = (1 - scrollProgress) * 300 - 150;
+              
+              // Move "Más fácil" from left to right  
+              const easierTranslateX = (scrollProgress - 0.5) * 300;
+              
+              payText.style.transform = `translateX(${payTranslateX}px)`;
+              easierText.style.transform = `translateX(${easierTranslateX}px)`;
             }
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Clean up event listener
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+            // ADD THIS: Different parallax speeds for mobile vs desktop
+            const isMobile = window.innerWidth <= 768;
+            const parallaxSpeed = isMobile ? -0.03 : -0.1; // Much slower on mobile
+            
+            const backgroundOffset = scrollY * parallaxSpeed;
+            retailSection.style.backgroundPosition = `center ${backgroundOffset}px`;
+          }
+        }
+        ticking = false;
+      });
+      ticking = true;
+    }
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  
+  // Clean up event listener
+  return () => {
+    window.removeEventListener('scroll', handleScroll);
+  };
+}, []);
 
   const openSignupModal = () => {
     console.log('Join Now button clicked');
