@@ -33,7 +33,7 @@ function App() {
             <Route path="/verify" element={<SignupVerification />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
-            <Route path="/fees" element={<Fees Page />} />
+            <Route path="/fees" element={<Fees />} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={
