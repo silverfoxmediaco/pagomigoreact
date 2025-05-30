@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SignupVerification.css';
+// Import Navigation and Footer components
+import Navigation from './Navigation';
+import Footer from './Footer';
 
 const SignupVerification = () => {
   const [verificationCode, setVerificationCode] = useState('');
@@ -84,75 +87,84 @@ const SignupVerification = () => {
   };
 
   return (
-    <div className="verification-container">
-      <div className="verification-card">
-        {/* EMAIL VERIFICATION UI (ACTIVE) */}
-        <h2>Verify Your Email</h2>
-        <p>A verification code has been sent to {maskEmail(emailForVerification)}</p>
-        <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
-          Check your email inbox and spam folder for the 6-digit verification code.
-        </p>
-        
-        {/* 
-        PHONE VERIFICATION UI (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
-        <h2>Verify Your Phone</h2>
-        <p>A verification code has been sent to {phoneForVerification}</p>
-        */}
-        
-        {message && (
-          <div className={`message ${isError ? 'error' : 'success'}`}>
-            {message}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="verificationCode">Verification Code</label>
-            <input
-              type="text"
-              id="verificationCode"
-              value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
-              placeholder="Enter 6-digit verification code"
-              maxLength="6"
-              pattern="[0-9]{6}"
-              inputMode="numeric"
-            />
-          </div>
-          
-          <button 
-            type="submit" 
-            className="primary-btn"
-            disabled={loading}
-          >
-            {loading ? 'Verifying...' : 'Verify Email'}
-          </button>
-        </form>
-        
-        <div className="resend-container">
-          {/* EMAIL VERIFICATION RESEND (ACTIVE) */}
-          <p>Didn't receive the email?</p>
-          <button 
-            onClick={handleResendCode} 
-            className="text-btn"
-            disabled={loading}
-          >
-            Resend Verification Email
-          </button>
+    <div>
+      {/* Add Navigation */}
+      <Navigation />
+      
+      {/* Main Content */}
+      <div className="verification-container">
+        <div className="verification-card">
+          {/* EMAIL VERIFICATION UI (ACTIVE) */}
+          <h2>Verify Your Email</h2>
+          <p>A verification code has been sent to {maskEmail(emailForVerification)}</p>
+          <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
+            Check your email inbox and spam folder for the 6-digit verification code.
+          </p>
           
           {/* 
-          PHONE VERIFICATION RESEND (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
-          <p>Didn't receive the code?</p>
-          <button 
-            onClick={handleResendCode} 
-            className="text-btn"
-            disabled={loading}
-          >
-            Resend Code
-          </button>
+          PHONE VERIFICATION UI (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
+          <h2>Verify Your Phone</h2>
+          <p>A verification code has been sent to {phoneForVerification}</p>
           */}
+          
+          {message && (
+            <div className={`message ${isError ? 'error' : 'success'}`}>
+              {message}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="verificationCode">Verification Code</label>
+              <input
+                type="text"
+                id="verificationCode"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                placeholder="Enter 6-digit verification code"
+                maxLength="6"
+                pattern="[0-9]{6}"
+                inputMode="numeric"
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="primary-btn"
+              disabled={loading}
+            >
+              {loading ? 'Verifying...' : 'Verify Email'}
+            </button>
+          </form>
+          
+          <div className="resend-container">
+            {/* EMAIL VERIFICATION RESEND (ACTIVE) */}
+            <p>Didn't receive the email?</p>
+            <button 
+              onClick={handleResendCode} 
+              className="text-btn"
+              disabled={loading}
+            >
+              Resend Verification Email
+            </button>
+            
+            {/* 
+            PHONE VERIFICATION RESEND (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
+            <p>Didn't receive the code?</p>
+            <button 
+              onClick={handleResendCode} 
+              className="text-btn"
+              disabled={loading}
+            >
+              Resend Code
+            </button>
+            */}
+          </div>
         </div>
       </div>
+      
+      {/* Add Footer */}
+      <Footer />
     </div>
   );
 };
