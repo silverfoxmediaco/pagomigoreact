@@ -8,6 +8,8 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
   console.log('SignupModal rendered with isOpen:', propIsOpen);
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsError, setShowTermsError] = useState(false);
   const navigate = useNavigate();
   const modalRef = useRef(null);
 
@@ -57,6 +59,9 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
   // Handle close with animation
   const handleClose = () => {
     setIsAnimating(false);
+    // Reset form state when closing
+    setTermsAccepted(false);
+    setShowTermsError(false);
     setTimeout(() => {
       closeModal();
     }, 300); // Match the CSS animation duration
@@ -77,11 +82,62 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
     return () => {
       document.removeEventListener('keydown', handleEscKey);
     };
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   // Handle successful signup
   const handleSignupSuccess = () => {
+    // Check terms acceptance before allowing signup to proceed
+    if (!termsAccepted) {
+      setShowTermsError(true);
+      return false; // Prevent signup from proceeding
+    }
+    
+    setShowTermsError(false);
     handleClose();
+    return true;
+  };
+
+  // Handle terms checkbox change
+  const handleTermsChange = (e) => {
+    setTermsAccepted(e.target.checked);
+    if (e.target.checked) {
+      setShowTermsError(false);
+    }
+  };
+
+  // Custom signup form wrapper to handle terms validation
+  const SignupFormWrapper = () => {
+    const [formRef, setFormRef] = useState(null);
+
+    useEffect(() => {
+      if (formRef) {
+        const form = formRef.querySelector('form');
+        if (form) {
+          const originalSubmit = form.onsubmit;
+          form.onsubmit = (e) => {
+            if (!termsAccepted) {
+              e.preventDefault();
+              setShowTermsError(true);
+              return false;
+            }
+            setShowTermsError(false);
+            // Call original submit if terms are accepted
+            if (originalSubmit) {
+              return originalSubmit(e);
+            }
+          };
+        }
+      }
+    }, [formRef]);
+
+    return (
+      <div ref={setFormRef}>
+        <SignupForm 
+          onSuccess={handleSignupSuccess} 
+          className="slide-modal-form"
+        />
+      </div>
+    );
   };
 
   console.log('Modal state - isOpen:', isOpen, 'isAnimating:', isAnimating);
@@ -106,15 +162,14 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
         </div>
         
         <div className="slide-modal-body">
-          <SignupForm 
-            onSuccess={handleSignupSuccess} 
-            className="slide-modal-form"
-          />
+          <SignupFormWrapper />
+          
           <div className="terms-checkbox">
             <label className="checkbox-container">
               <input
                 type="checkbox"
-                required
+                checked={termsAccepted}
+                onChange={handleTermsChange}
                 className="terms-checkbox-input"
               />
               <span className="checkbox-checkmark"></span>
@@ -139,7 +194,17 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
                   </Link>
               </span>
             </label>
+            {showTermsError && (
+              <div className="terms-error" style={{
+                color: '#dc3545',
+                fontSize: '14px',
+                marginTop: '5px'
+              }}>
+                Please accept the Terms & Conditions to continue
+              </div>
+            )}
           </div>
+          
           <div className="login-link">
             <p>Already have an account? <a href="/login" onClick={(e) => {
               e.preventDefault();

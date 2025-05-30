@@ -10,7 +10,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [verificationSent, setVerificationSent] = useState(false);
+  
+  // EMAIL VERIFICATION (ACTIVE)
+  const [emailForVerification, setEmailForVerification] = useState('');
+  
+  /* 
+  // PHONE VERIFICATION (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
   const [phoneForVerification, setPhoneForVerification] = useState('');
+  */
+  
   const [pendingUserData, setPendingUserData] = useState(null); // Store user data during verification
 
   // Check for existing token on mount
@@ -34,7 +42,7 @@ export const AuthProvider = ({ children }) => {
         
         if (response.ok) {
           const responseData = await response.json();
-          setUser(responseData.user); // FIX: Access nested user property
+          setUser(responseData.user);
           setIsAuthenticated(true);
         } else {
           // Token invalid, clear it
@@ -54,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Register function - now uses Twilio verification
+  // Register function - now uses Email verification
   const register = async (userData) => {
     try {
       setLoading(true);
@@ -63,6 +71,19 @@ export const AuthProvider = ({ children }) => {
       // Store user data for after verification
       setPendingUserData(userData);
       
+      // Send Email verification using Mailgun
+      const verificationResult = await sendVerificationCode(userData.email, userData.name);
+      
+      if (verificationResult.success) {
+        setEmailForVerification(userData.email);
+        setVerificationSent(true);
+        return { success: true, verificationNeeded: true };
+      } else {
+        return { success: false, error: verificationResult.error };
+      }
+      
+      /*
+      // TWILIO SMS VERIFICATION (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
       // Send SMS verification using Twilio
       const verificationResult = await sendVerificationCode(userData.phone);
       
@@ -73,6 +94,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         return { success: false, error: verificationResult.error };
       }
+      */
       
     } catch (err) {
       setError(err.message);
@@ -82,19 +104,52 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Send verification code using NEW Twilio endpoint
+  // Send verification code using Email endpoint (ACTIVE)
+  const sendVerificationCode = async (email, name = '') => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Call your Email endpoint
+      const response = await fetch(`${API_BASE}/api/email/send-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, name })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send verification email');
+      }
+      
+      setEmailForVerification(email);
+      setVerificationSent(true);
+      return { success: true };
+    } catch (err) {
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /*
+  // SEND VERIFICATION CODE USING TWILIO ENDPOINT (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
   const sendVerificationCode = async (phone) => {
     try {
       setLoading(true);
       setError(null);
       
-      // Call your NEW Twilio endpoint
+      // Call your Twilio endpoint
       const response = await fetch(`${API_BASE}/api/sms/send-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ phoneNumber: phone }) // Note: phoneNumber not phone
+        body: JSON.stringify({ phoneNumber: phone })
       });
       
       const data = await response.json();
@@ -113,25 +168,74 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+  */
 
-  // Verify code using NEW Twilio endpoint
+  // Verify code using Email endpoint (ACTIVE)
   const verifyCode = async (code) => {
     try {
       setLoading(true);
       setError(null);
       
+      if (!emailForVerification) {
+        throw new Error('Email address not found');
+      }
+      
+      // Call your Email verification endpoint
+      const response = await fetch(`${API_BASE}/api/email/verify-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: emailForVerification,
+          code: code
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Verification failed');
+      }
+      
+      if (!data.verified) {
+        throw new Error('Invalid verification code');
+      }
+      
+      // Now that email is verified, create the user account
+      if (pendingUserData) {
+        const accountResult = await createUserAccount(pendingUserData);
+        if (accountResult.success) {
+          // Store token and set authenticated state
+          localStorage.setItem('token', accountResult.token);
+          setUser(accountResult.user);
+          setIsAuthenticated(true);
+          setVerificationSent(false);
+          setEmailForVerification('');
+          setPendingUserData(null);
+          
+          return { success: true };
+        } else {
+          throw new Error(accountResult.error || 'Failed to create account');
+        }
+      } else {
+        throw new Error('User data not found');
+      }
+      
+      /*
+      // TWILIO VERIFICATION (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
       if (!phoneForVerification) {
         throw new Error('Phone number not found');
       }
       
-      // Call your NEW Twilio verification endpoint
+      // Call your Twilio verification endpoint
       const response = await fetch(`${API_BASE}/api/sms/verify-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          phoneNumber: phoneForVerification, // Note: phoneNumber not phone
+          phoneNumber: phoneForVerification,
           code: code
         })
       });
@@ -165,6 +269,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         throw new Error('User data not found');
       }
+      */
       
     } catch (err) {
       setError(err.message);
@@ -184,7 +289,8 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({
           ...userData,
-          phoneVerified: true // Mark phone as verified
+          emailVerified: true // Mark email as verified (ACTIVE)
+          // phoneVerified: true // Mark phone as verified (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
         })
       });
       
@@ -223,7 +329,7 @@ export const AuthProvider = ({ children }) => {
       // Store token
       localStorage.setItem('token', data.token);
       
-      // FIX: Set user data from login response
+      // Set user data from login response
       setUser(data.user);
       setIsAuthenticated(true);
       
@@ -281,7 +387,7 @@ export const AuthProvider = ({ children }) => {
       }
       
       const responseData = await response.json();
-      setUser(responseData.user); // FIX: Access nested user property
+      setUser(responseData.user);
       return responseData.user;
     } catch (err) {
       console.error('Error fetching user profile:', err);
@@ -299,7 +405,12 @@ export const AuthProvider = ({ children }) => {
       loading,
       error,
       verificationSent,
+      // EMAIL VERIFICATION (ACTIVE)
+      emailForVerification,
+      /* 
+      // PHONE VERIFICATION (COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED)
       phoneForVerification,
+      */
       register,
       login,
       logout,

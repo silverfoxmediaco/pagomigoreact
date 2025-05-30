@@ -10,11 +10,24 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const plaidRoutes = require('./routes/plaidRoutes');
 
-// ADD TWILIO
+// ADD MAILGUN (MODERN PACKAGE)
+const Mailgun = require('mailgun.js');
+const formData = require('form-data');
+
+// Initialize Mailgun
+const mailgun = new Mailgun(formData);
+const mg = mailgun.client({
+  username: 'api',
+  key: process.env.MAILGUN_API_KEY
+});
+
+/* 
+// TWILIO - COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
 const twilio = require('twilio');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = twilio(accountSid, authToken);
+*/
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -33,8 +46,8 @@ const UserSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true,
-    unique: true,
+    required: false, // Changed to false since we're using email verification
+    sparse: true,    // Allows multiple null values
     trim: true
   },
   username: {
@@ -51,7 +64,8 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    sparse: true, // Allows multiple null values (users can add email later)
+    required: true,  // Now required for email verification
+    unique: true,
     trim: true,
     lowercase: true
   },
@@ -133,7 +147,185 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// TWILIO VERIFY ENDPOINTS
+// EMAIL VERIFICATION ENDPOINTS (MODERN MAILGUN)
+app.post('/api/email/send-verification', async (req, res) => {
+  try {
+    console.log('=== EMAIL VERIFICATION DEBUG ===');
+    console.log('Full request body:', JSON.stringify(req.body, null, 2));
+    
+    const { email, name } = req.body;
+    
+    console.log('Extracted email:', email);
+    console.log('Extracted name:', name);
+    console.log('Email type:', typeof email);
+    
+    // Validate email format
+    if (!email) {
+      throw new Error('Email is required');
+    }
+    
+    if (typeof email !== 'string') {
+      throw new Error('Email must be a string');
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error('Invalid email format');
+    }
+    
+    console.log('Mailgun credentials check:');
+    console.log('API Key exists:', !!process.env.MAILGUN_API_KEY);
+    console.log('Domain exists:', !!process.env.MAILGUN_DOMAIN);
+    console.log('Domain:', process.env.MAILGUN_DOMAIN);
+    
+    // Generate 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store verification code temporarily (in production, use Redis or database)
+    // For now, we'll store in memory with expiration
+    global.verificationCodes = global.verificationCodes || {};
+    global.verificationCodes[email] = {
+      code: verificationCode,
+      expires: Date.now() + 10 * 60 * 1000, // 10 minutes
+      attempts: 0
+    };
+    
+    console.log('Generated verification code for:', email);
+    console.log('Attempting to send email...');
+    
+    // Prepare email content (MODERN MAILGUN API)
+    const messageData = {
+      from: `PagoMigo <noreply@${process.env.MAILGUN_DOMAIN}>`,
+      to: email,
+      subject: 'Verify Your PagoMigo Account',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0;">PagoMigo</h1>
+          </div>
+          <div style="padding: 30px; background-color: #f9f9f9;">
+            <h2 style="color: #333;">Welcome${name ? `, ${name}` : ''}!</h2>
+            <p style="color: #666; font-size: 16px;">
+              Thank you for joining PagoMigo. To complete your account verification, please use the code below:
+            </p>
+            <div style="background-color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+              <h3 style="color: #667eea; font-size: 32px; margin: 0; letter-spacing: 5px;">${verificationCode}</h3>
+            </div>
+            <p style="color: #666; font-size: 14px;">
+              This code will expire in 10 minutes. If you didn't request this verification, please ignore this email.
+            </p>
+            <p style="color: #666; font-size: 14px;">
+              Welcome to the future of digital payments!<br>
+              The PagoMigo Team
+            </p>
+          </div>
+        </div>
+      `,
+      text: `Welcome to PagoMigo${name ? `, ${name}` : ''}! Your verification code is: ${verificationCode}. This code will expire in 10 minutes.`
+    };
+    
+    // Send email via Mailgun (MODERN API)
+    const result = await mg.messages.create(process.env.MAILGUN_DOMAIN, messageData);
+    
+    console.log('Email sent successfully!');
+    console.log('Mailgun response:', result);
+    console.log('================================');
+    
+    res.json({ 
+      success: true, 
+      message: 'Verification email sent',
+      emailSent: true
+    });
+    
+  } catch (error) {
+    console.error('=== EMAIL ERROR DETAILS ===');
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Full error object:', error);
+    console.error('============================');
+    
+    res.status(500).json({ 
+      success: false, 
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/email/verify-code', async (req, res) => {
+  try {
+    console.log('=== EMAIL CODE VERIFICATION ===');
+    const { email, code } = req.body;
+    
+    console.log('Email:', email);
+    console.log('Code received:', code);
+    
+    if (!email || !code) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email and code are required'
+      });
+    }
+    
+    // Check stored verification code
+    const storedData = global.verificationCodes?.[email];
+    
+    if (!storedData) {
+      return res.status(400).json({
+        success: false,
+        error: 'No verification code found for this email'
+      });
+    }
+    
+    // Check if expired
+    if (Date.now() > storedData.expires) {
+      delete global.verificationCodes[email];
+      return res.status(400).json({
+        success: false,
+        error: 'Verification code has expired'
+      });
+    }
+    
+    // Check attempts
+    if (storedData.attempts >= 3) {
+      delete global.verificationCodes[email];
+      return res.status(400).json({
+        success: false,
+        error: 'Too many verification attempts'
+      });
+    }
+    
+    // Verify code
+    if (storedData.code !== code.toString()) {
+      storedData.attempts++;
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid verification code'
+      });
+    }
+    
+    // Success - clean up
+    delete global.verificationCodes[email];
+    
+    console.log('Email verification successful!');
+    console.log('==============================');
+    
+    res.json({ 
+      success: true, 
+      verified: true,
+      message: 'Email verified successfully'
+    });
+    
+  } catch (error) {
+    console.error('Email Verification Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+/*
+// TWILIO VERIFY ENDPOINTS - COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
 app.post('/api/sms/send-verification', async (req, res) => {
   try {
     console.log('=== TWILIO SMS DEBUG ===');
@@ -238,17 +430,18 @@ app.post('/api/sms/verify-code', async (req, res) => {
     });
   }
 });
+*/
 
 // USER ACCOUNT CREATION (PRODUCTION READY)
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { name, phone, username, password, phoneVerified } = req.body;
+    const { name, phone, email, username, password, phoneVerified, emailVerified } = req.body;
     
-    // Validate required fields
-    if (!name || !phone || !username || !password) {
+    // Validate required fields - email is now required, phone is optional
+    if (!name || !email || !username || !password) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required'
+        message: 'Name, email, username, and password are required'
       });
     }
 
@@ -264,16 +457,24 @@ app.post('/api/auth/signup', async (req, res) => {
     const existingUser = await User.findOne({
       $or: [
         { username: username.toLowerCase() },
-        { phone: phone }
+        { email: email.toLowerCase() },
+        ...(phone ? [{ phone: phone }] : [])
       ]
     });
     
     if (existingUser) {
+      let message = 'User already exists';
+      if (existingUser.username === username.toLowerCase()) {
+        message = 'Username already exists';
+      } else if (existingUser.email === email.toLowerCase()) {
+        message = 'Email already registered';
+      } else if (phone && existingUser.phone === phone) {
+        message = 'Phone number already registered';
+      }
+      
       return res.status(400).json({
         success: false,
-        message: existingUser.username === username.toLowerCase() 
-          ? 'Username already exists' 
-          : 'Phone number already registered'
+        message: message
       });
     }
     
@@ -284,10 +485,12 @@ app.post('/api/auth/signup', async (req, res) => {
     // Create new user
     const newUser = new User({
       name: name.trim(),
-      phone: phone.trim(),
+      email: email.toLowerCase().trim(),
       username: username.toLowerCase().trim(),
       password: hashedPassword,
-      phoneVerified: phoneVerified || false
+      phone: phone ? phone.trim() : null,
+      phoneVerified: phoneVerified || false,
+      emailVerified: emailVerified || false
     });
     
     await newUser.save();
@@ -297,7 +500,7 @@ app.post('/api/auth/signup', async (req, res) => {
       { 
         userId: newUser._id,
         username: newUser.username,
-        phone: newUser.phone
+        email: newUser.email
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: process.env.JWT_EXPIRY || '7d' }
@@ -308,8 +511,8 @@ app.post('/api/auth/signup', async (req, res) => {
       id: newUser._id,
       name: newUser.name,
       phone: newUser.phone,
-      username: newUser.username,
       email: newUser.email,
+      username: newUser.username,
       phoneVerified: newUser.phoneVerified,
       emailVerified: newUser.emailVerified,
       createdAt: newUser.createdAt
@@ -380,10 +583,10 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// UPDATE USER PROFILE (for adding email, etc.)
+// UPDATE USER PROFILE (for adding phone, etc.)
 app.put('/api/user/profile', authenticateToken, async (req, res) => {
   try {
-    const { email, profile } = req.body;
+    const { email, phone, profile } = req.body;
     const userId = req.user.userId;
     
     const updateData = {};
@@ -403,6 +606,23 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
       }
       
       updateData.email = email.toLowerCase().trim();
+    }
+    
+    if (phone) {
+      // Check if phone already exists
+      const existingUser = await User.findOne({ 
+        phone: phone,
+        _id: { $ne: userId }
+      });
+      
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Phone number already registered'
+        });
+      }
+      
+      updateData.phone = phone.trim();
     }
     
     if (profile) {
@@ -443,10 +663,11 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
     
-    // Find user by username or phone
+    // Find user by username, email, or phone
     const user = await User.findOne({
       $or: [
         { username: username.toLowerCase() },
+        { email: username.toLowerCase() },
         { phone: username }
       ]
     });
@@ -472,7 +693,7 @@ app.post('/api/auth/login', async (req, res) => {
       { 
         userId: user._id,
         username: user.username,
-        phone: user.phone
+        email: user.email
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: process.env.JWT_EXPIRY || '7d' }
@@ -488,7 +709,8 @@ app.post('/api/auth/login', async (req, res) => {
         username: user.username,
         phone: user.phone,
         email: user.email,
-        phoneVerified: user.phoneVerified
+        phoneVerified: user.phoneVerified,
+        emailVerified: user.emailVerified
       }
     });
     
@@ -502,7 +724,8 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Twilio webhook handler
+/*
+// TWILIO WEBHOOK HANDLER - COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
 app.post('/api/sms/webhook', (req, res) => {
   console.log('Twilio webhook received:', req.body);
   const { From, Body, MessageSid, MessageStatus } = req.body;
@@ -517,6 +740,7 @@ app.post('/api/sms/webhook', (req, res) => {
   
   res.status(200).send('OK');
 });
+*/
 
 // Serve static files if build exists
 if (fs.existsSync(buildPath)) {
@@ -528,6 +752,18 @@ app.get('/api/ping', (req, res) => {
   res.json({ message: 'API is working!' });
 });
 
+// EMAIL TEST ENDPOINT (MODERN MAILGUN)
+app.get('/api/email/test', (req, res) => {
+  res.json({ 
+    message: 'Mailgun Email API is ready!',
+    domain: process.env.MAILGUN_DOMAIN,
+    hasApiKey: !!process.env.MAILGUN_API_KEY,
+    mailgunVersion: 'modern mailgun.js'
+  });
+});
+
+/*
+// SMS TEST ENDPOINT - COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
 app.get('/api/sms/test', (req, res) => {
   res.json({ 
     message: 'Twilio SMS API is ready!',
@@ -535,6 +771,7 @@ app.get('/api/sms/test', (req, res) => {
     hasCredentials: !!(accountSid && authToken)
   });
 });
+*/
 
 // Serve the React app or a fallback message
 app.use(function(req, res) {
@@ -550,7 +787,7 @@ app.use(function(req, res) {
           <h1>PagoMigo Server Running</h1>
           <p>Build directory expected at: ${buildPath}</p>
           <p>Current directory: ${__dirname}</p>
-          <p><a href="/api/ping">Test API</a> | <a href="/api/sms/test">Test Twilio SMS</a></p>
+          <p><a href="/api/ping">Test API</a> | <a href="/api/email/test">Test Mailgun Email</a></p>
         </body>
       </html>
     `);
@@ -560,7 +797,8 @@ app.use(function(req, res) {
 // Start the server
 app.listen(PORT, function() {
   console.log(`Server running on port ${PORT}`);
-  console.log('Twilio SMS endpoints ready');
+  console.log('Mailgun Email endpoints ready');
   console.log('Auth endpoints ready');
   console.log('User profile endpoints ready');
+  // console.log('Twilio SMS endpoints ready'); // COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
 });

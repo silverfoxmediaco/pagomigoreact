@@ -8,6 +8,7 @@ import PhoneInput from 'react-phone-number-input';
 const SignupForm = ({ onSuccess, className = '' }) => {
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
     phone: '',
     username: '',
     password: '',
@@ -38,18 +39,25 @@ const SignupForm = ({ onSuccess, className = '' }) => {
     setMessage('');
     setIsError(false);
     
-    // Debug phone number format
+    // Debug email and form data
     console.log('=== SIGNUP FORM DEBUG ===');
     console.log('Full form data:', formData);
+    console.log('Email field:', formData.email);
+    console.log('Email type:', typeof formData.email);
     console.log('Phone field:', formData.phone);
-    console.log('Phone type:', typeof formData.phone);
-    console.log('Phone length:', formData.phone?.length);
-    console.log('Phone starts with +:', formData.phone?.startsWith('+'));
     console.log('========================');
     
-    // Basic validation
-    if (!formData.name || !formData.username || !formData.password) {
-      setMessage('All fields are required');
+    // Basic validation - email is now required, phone is optional
+    if (!formData.name || !formData.email || !formData.username || !formData.password) {
+      setMessage('Name, email, username, and password are required');
+      setIsError(true);
+      return;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setMessage('Please enter a valid email address');
       setIsError(true);
       return;
     }
@@ -60,16 +68,9 @@ const SignupForm = ({ onSuccess, className = '' }) => {
       return;
     }
     
-    // Phone validation - react-phone-number-input provides properly formatted numbers
-    if (!formData.phone) {
-      setMessage('Please enter a valid phone number');
-      setIsError(true);
-      return;
-    }
-    
-    // Additional phone validation
-    if (!formData.phone.startsWith('+')) {
-      setMessage('Phone number must include country code');
+    // Phone validation is now optional
+    if (formData.phone && !formData.phone.startsWith('+')) {
+      setMessage('Phone number must include country code (or leave blank)');
       setIsError(true);
       return;
     }
@@ -123,9 +124,22 @@ const SignupForm = ({ onSuccess, className = '' }) => {
         </div>
         
         <div className="form-group">
-          <label htmlFor="phone">Phone Number</label>
+          <label htmlFor="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Enter your email address"
+            required
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="phone">Phone Number (Optional)</label>
           <PhoneInput
-            placeholder="Enter phone number"
+            placeholder="Enter phone number (optional)"
             value={formData.phone}
             onChange={handlePhoneChange}
             defaultCountry="US"
