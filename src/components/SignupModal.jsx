@@ -4,6 +4,41 @@ import { useNavigate, Link } from 'react-router-dom';
 import '../styles/SignupModal.css';
 import SignupForm from './SignupForm';
 
+// Move SignupFormWrapper OUTSIDE of SignupModal to prevent re-creation
+const SignupFormWrapper = ({ termsAccepted, setShowTermsError, onSuccess }) => {
+  const [formRef, setFormRef] = useState(null);
+
+  useEffect(() => {
+    if (formRef) {
+      const form = formRef.querySelector('form');
+      if (form) {
+        const originalSubmit = form.onsubmit;
+        form.onsubmit = (e) => {
+          if (!termsAccepted) {
+            e.preventDefault();
+            setShowTermsError(true);
+            return false;
+          }
+          setShowTermsError(false);
+          // Call original submit if terms are accepted
+          if (originalSubmit) {
+            return originalSubmit(e);
+          }
+        };
+      }
+    }
+  }, [formRef, termsAccepted, setShowTermsError]);
+
+  return (
+    <div ref={setFormRef}>
+      <SignupForm 
+        onSuccess={onSuccess} 
+        className="slide-modal-form"
+      />
+    </div>
+  );
+};
+
 const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
   console.log('SignupModal rendered with isOpen:', propIsOpen);
   const [internalIsOpen, setInternalIsOpen] = useState(false);
@@ -105,41 +140,6 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
     }
   };
 
-  // Custom signup form wrapper to handle terms validation
-  const SignupFormWrapper = () => {
-    const [formRef, setFormRef] = useState(null);
-
-    useEffect(() => {
-      if (formRef) {
-        const form = formRef.querySelector('form');
-        if (form) {
-          const originalSubmit = form.onsubmit;
-          form.onsubmit = (e) => {
-            if (!termsAccepted) {
-              e.preventDefault();
-              setShowTermsError(true);
-              return false;
-            }
-            setShowTermsError(false);
-            // Call original submit if terms are accepted
-            if (originalSubmit) {
-              return originalSubmit(e);
-            }
-          };
-        }
-      }
-    }, [formRef]);
-
-    return (
-      <div ref={setFormRef}>
-        <SignupForm 
-          onSuccess={handleSignupSuccess} 
-          className="slide-modal-form"
-        />
-      </div>
-    );
-  };
-
   console.log('Modal state - isOpen:', isOpen, 'isAnimating:', isAnimating);
   
   if (!isOpen) {
@@ -162,7 +162,11 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
         </div>
         
         <div className="slide-modal-body">
-          <SignupFormWrapper />
+          <SignupFormWrapper 
+            termsAccepted={termsAccepted}
+            setShowTermsError={setShowTermsError}
+            onSuccess={handleSignupSuccess}
+          />
           
           <div className="terms-checkbox">
             <label className="checkbox-container">
