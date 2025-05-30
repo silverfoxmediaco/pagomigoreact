@@ -91,6 +91,10 @@ const UserSchema = new mongoose.Schema({
   personaInquiryId: String,
   unitCustomerId: String,
   unitCustomerToken: String,
+  balance: {
+    type: Number,
+    default: 0
+  },
   profile: {
     firstName: String,
     lastName: String,
@@ -491,7 +495,8 @@ app.post('/api/auth/signup', async (req, res) => {
       password: hashedPassword,
       phone: phone ? phone.trim() : null,
       phoneVerified: phoneVerified || false,
-      emailVerified: emailVerified || false
+      emailVerified: emailVerified || false,
+      balance: 0 // Initialize balance to 0
     });
     
     await newUser.save();
@@ -557,22 +562,48 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-// USER PROFILE ENDPOINT (PRODUCTION READY)
+// USER PROFILE ENDPOINT (FIXED TO MATCH FRONTEND EXPECTATIONS)
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {
+    console.log('=== FETCHING USER PROFILE ===');
+    console.log('User ID from token:', req.user.userId);
+    
     const user = await User.findById(req.user.userId).select('-password');
     
     if (!user) {
+      console.log('User not found');
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
     
-    res.json({
-      success: true,
-      user: user
+    console.log('User found in database:', {
+      id: user._id,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      phone: user.phone
     });
+    
+    // Format the response to match what your frontend expects
+    const profileData = {
+      name: user.name,
+      username: user.username,
+      phone: user.phone,
+      phone_verified: user.phoneVerified,
+      email: user.email,
+      address: user.profile?.address?.street || 'Not provided',
+      kyc_status: user.personaVerified ? 'completed' : 'pending',
+      balance: user.balance || 0, // Default to 0 instead of undefined
+      createdAt: user.createdAt
+    };
+    
+    console.log('Sending profile data:', profileData);
+    console.log('===============================');
+    
+    // Send the data directly (not wrapped in a 'user' object)
+    res.json(profileData);
     
   } catch (error) {
     console.error('Profile Error:', error);
