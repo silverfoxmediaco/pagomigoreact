@@ -136,7 +136,43 @@ const authenticateToken = (req, res, next) => {
 // TWILIO VERIFY ENDPOINTS
 app.post('/api/sms/send-verification', async (req, res) => {
   try {
+    console.log('=== TWILIO SMS DEBUG ===');
+    console.log('Full request body:', JSON.stringify(req.body, null, 2));
+    console.log('Headers:', req.headers);
+    console.log('Content-Type:', req.headers['content-type']);
+    
     const { phoneNumber } = req.body;
+    
+    console.log('Extracted phoneNumber:', phoneNumber);
+    console.log('phoneNumber type:', typeof phoneNumber);
+    console.log('phoneNumber length:', phoneNumber?.length);
+    console.log('First character:', phoneNumber?.[0]);
+    console.log('Last character:', phoneNumber?.[phoneNumber?.length - 1]);
+    
+    // Validate phone number format
+    if (!phoneNumber) {
+      throw new Error('Phone number is required');
+    }
+    
+    if (typeof phoneNumber !== 'string') {
+      throw new Error('Phone number must be a string');
+    }
+    
+    if (!phoneNumber.startsWith('+')) {
+      throw new Error('Phone number must include country code with + prefix');
+    }
+    
+    if (phoneNumber.length < 10 || phoneNumber.length > 15) {
+      throw new Error('Phone number length is invalid');
+    }
+    
+    console.log('Twilio credentials check:');
+    console.log('Account SID exists:', !!process.env.TWILIO_ACCOUNT_SID);
+    console.log('Auth Token exists:', !!process.env.TWILIO_AUTH_TOKEN);
+    console.log('Verify Service ID exists:', !!process.env.TWILIO_VERIFY_SERVICE_ID);
+    console.log('Verify Service ID:', process.env.TWILIO_VERIFY_SERVICE_ID);
+    
+    console.log('Attempting Twilio verification...');
     
     const verification = await client.verify.v2.services(process.env.TWILIO_VERIFY_SERVICE_ID)
       .verifications
@@ -145,7 +181,10 @@ app.post('/api/sms/send-verification', async (req, res) => {
         channel: 'sms'
       });
     
-    console.log('Verification sent:', verification.sid);
+    console.log('Verification successful!');
+    console.log('Verification SID:', verification.sid);
+    console.log('Verification status:', verification.status);
+    console.log('========================');
     
     res.json({ 
       success: true, 
@@ -154,10 +193,20 @@ app.post('/api/sms/send-verification', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('SMS Error:', error);
+    console.error('=== TWILIO ERROR DETAILS ===');
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error status:', error.status);
+    console.error('Error moreInfo:', error.moreInfo);
+    console.error('Full error object:', error);
+    console.error('Error stack:', error.stack);
+    console.error('===========================');
+    
     res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: error.message,
+      code: error.code,
+      details: error.moreInfo || 'No additional details'
     });
   }
 });

@@ -38,6 +38,15 @@ const SignupForm = ({ onSuccess, className = '' }) => {
     setMessage('');
     setIsError(false);
     
+    // Debug phone number format
+    console.log('=== SIGNUP FORM DEBUG ===');
+    console.log('Full form data:', formData);
+    console.log('Phone field:', formData.phone);
+    console.log('Phone type:', typeof formData.phone);
+    console.log('Phone length:', formData.phone?.length);
+    console.log('Phone starts with +:', formData.phone?.startsWith('+'));
+    console.log('========================');
+    
     // Basic validation
     if (!formData.name || !formData.username || !formData.password) {
       setMessage('All fields are required');
@@ -58,7 +67,18 @@ const SignupForm = ({ onSuccess, className = '' }) => {
       return;
     }
     
+    // Additional phone validation
+    if (!formData.phone.startsWith('+')) {
+      setMessage('Phone number must include country code');
+      setIsError(true);
+      return;
+    }
+    
     const { confirmPassword, ...signupData } = formData;
+    
+    console.log('=== SENDING TO REGISTER ===');
+    console.log('Signup data being sent:', signupData);
+    console.log('==========================');
     
     const result = await register(signupData);
     
@@ -109,7 +129,7 @@ const SignupForm = ({ onSuccess, className = '' }) => {
             value={formData.phone}
             onChange={handlePhoneChange}
             defaultCountry="US"
-            countries={['US', 'CA', 'MX', 'GB', 'DE', 'FR', 'ES', 'IT']} // You can customize this list
+            countries={['US', 'CA', 'MX', 'GT', 'BZ', 'SV', 'HN', 'NI', 'CR', 'PA', 'CO', 'VE', 'GY', 'SR', 'BR', 'EC', 'PE', 'BO', 'PY', 'UY', 'AR', 'CL', 'ES']} 
             className="phone-input"
           />
         </div>
