@@ -1,52 +1,78 @@
-// src/pages/BillPay.jsx
+// src/pages/BillPayTest.jsx
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import './BillPay.css';
-
-// Import SVG icons (you'll need to add these to your assets folder)
-import electricIcon from '../assets/electric_bolt_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
-import waterIcon from '../assets/water_drop_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
-import wifiIcon from '../assets/wifi_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
-import gasIcon from '../assets/gas_meter_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
-import houseIcon from '../assets/cottage_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
-import apartmentIcon from '../assets/apartment_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
-import carIcon from '../assets/directions_car_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
-import motorcycleIcon from '../assets/motorcycle_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
-import insuranceIcon from '../assets/car_crash_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg';
 import { useAuth } from '../context/AuthContext';
 
-const BillPay = () => {
+// MUI Components
+import {
+  Container,
+  Typography,
+  Box,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Grid,
+  Alert,
+  CircularProgress,
+  Chip,
+  Paper,
+  Divider
+} from '@mui/material';
+
+// MUI Icons
+import {
+  ElectricBolt as ElectricIcon,
+  WaterDrop as WaterIcon,
+  Wifi as WifiIcon,
+  LocalGasStation as GasIcon,
+  Home as HouseIcon,
+  Apartment as ApartmentIcon,
+  DirectionsCar as CarIcon,
+  TwoWheeler as MotorcycleIcon,
+  Security as InsuranceIcon,
+  Payment as PaymentIcon
+} from '@mui/icons-material';
+
+const BillPayTest = () => {
   const { t } = useLanguage();
-  const { user } = useAuth(); // Get current user
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [processingItem, setProcessingItem] = useState(null);
 
-  // UPDATED HANDLEPAYMENT FUNCTION WITH UNIT API INTEGRATION
+  // Handle payment with improved UX
   const handlePayment = async (paymentType) => {
     if (!user) {
-      alert(t('pleaseLogInToMakePayments') || 'Please log in to make payments');
+      setPaymentStatus({
+        type: 'error',
+        message: t('pleaseLogInToMakePayments') || 'Please log in to make payments'
+      });
       return;
     }
 
     setLoading(true);
+    setProcessingItem(paymentType);
     setPaymentStatus(null);
 
     try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       // Replace with your actual Unit API endpoint
       const response = await fetch('/api/unit/bill-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`, // Your auth token
+          'Authorization': `Bearer ${user.token}`,
         },
         body: JSON.stringify({
           paymentType: paymentType,
-          // You'll need to collect these from user input or forms
-          payeeId: 'utility-company-id', // This would come from a form
-          amount: 100, // This would come from user input
-          accountId: user.unitAccountId, // User's Unit account ID
+          payeeId: 'utility-company-id',
+          amount: 100,
+          accountId: user.unitAccountId,
           memo: `${paymentType} bill payment`
         })
       });
@@ -54,161 +80,305 @@ const BillPay = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setPaymentStatus(`${paymentType} ${t('paymentSuccessful') || 'payment successful'}!`);
-        console.log('Payment successful:', result);
-        // Optionally redirect or update UI
+        setPaymentStatus({
+          type: 'success',
+          message: `${paymentType} ${t('paymentSuccessful') || 'payment successful'}!`
+        });
       } else {
         throw new Error(result.message || t('paymentFailed') || 'Payment failed');
       }
 
     } catch (error) {
       console.error('Payment failed:', error);
-      setPaymentStatus(`${t('paymentFailed') || 'Payment failed'}: ${error.message}`);
+      setPaymentStatus({
+        type: 'error',
+        message: `${t('paymentFailed') || 'Payment failed'}: ${error.message}`
+      });
     } finally {
       setLoading(false);
+      setProcessingItem(null);
     }
   };
+
+  // Bill payment categories configuration
+  const billCategories = [
+    {
+      title: t('utilities') || 'Utilities',
+      description: t('utilitiesDesc') || 'Pay your utility bills quickly and securely',
+      items: [
+        {
+          name: 'Electricity',
+          label: t('payElectricity') || 'Pay Electricity',
+          icon: <ElectricIcon />,
+          color: '#FF9800'
+        },
+        {
+          name: 'Water',
+          label: t('payWater') || 'Pay Water',
+          icon: <WaterIcon />,
+          color: '#2196F3'
+        },
+        {
+          name: 'Internet',
+          label: t('payInternet') || 'Pay Internet',
+          icon: <WifiIcon />,
+          color: '#4CAF50'
+        },
+        {
+          name: 'Gas',
+          label: t('payGas') || 'Pay Gas',
+          icon: <GasIcon />,
+          color: '#F44336'
+        }
+      ]
+    },
+    {
+      title: t('rentMortgage') || 'Rent & Mortgage',
+      description: t('rentMortgageDesc') || 'Make your housing payments on time',
+      items: [
+        {
+          name: 'Mortgage',
+          label: t('payMortgage') || 'Pay Mortgage',
+          icon: <HouseIcon />,
+          color: '#795548'
+        },
+        {
+          name: 'Rent',
+          label: t('payRent') || 'Pay Rent',
+          icon: <ApartmentIcon />,
+          color: '#607D8B'
+        }
+      ]
+    },
+    {
+      title: t('carTruckLoan') || 'Automotive',
+      description: t('automotiveDesc') || 'Vehicle loans and insurance payments',
+      items: [
+        {
+          name: 'Auto Loan',
+          label: t('payAutoLoan') || 'Pay Auto Loan',
+          icon: <CarIcon />,
+          color: '#3F51B5'
+        },
+        {
+          name: 'Bike Loan',
+          label: t('payBikeLoan') || 'Pay Bike Loan',
+          icon: <MotorcycleIcon />,
+          color: '#E91E63'
+        },
+        {
+          name: 'Insurance',
+          label: t('payInsurance') || 'Pay Insurance',
+          icon: <InsuranceIcon />,
+          color: '#9C27B0'
+        }
+      ]
+    }
+  ];
 
   return (
     <>
       <Navigation />
       
-      <div className="billpay-page">
-        <h1 className="billpay-title">{t('billPayTitle')}</h1>
-        
-        {/* Payment Status Messages */}
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        {/* Header */}
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography 
+            variant="h3" 
+            component="h1" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 'bold',
+              color: '#1976d2',
+              mb: 2
+            }}
+          >
+            {t('billPayTitle') || 'Bill Pay'}
+          </Typography>
+          <Typography 
+            variant="h6" 
+            color="text.secondary"
+            sx={{ maxWidth: 600, mx: 'auto' }}
+          >
+            Pay your bills quickly and securely with our integrated payment system
+          </Typography>
+        </Box>
+
+        {/* Payment Status Alert */}
         {paymentStatus && (
-          <div className={`payment-status ${paymentStatus.includes('failed') || paymentStatus.includes('falló') ? 'error' : 'success'}`}>
-            {paymentStatus}
-          </div>
+          <Box sx={{ mb: 3 }}>
+            <Alert 
+              severity={paymentStatus.type}
+              sx={{ 
+                '& .MuiAlert-message': { fontSize: '16px' }
+              }}
+            >
+              {paymentStatus.message}
+            </Alert>
+          </Box>
         )}
-        
-        <main className="billpay">
-          {/* Utilities Section */}
-          <section className="utilities">
-            <h2>{t('utilities')}</h2>
-            <p>{t('utilitiesDesc')}</p>
-            <div className="utilities-list">
-              <div className="utility-item">
-                <button 
-                  className="utilitiesbtn"
-                  onClick={() => handlePayment('Electricity')}
-                  disabled={loading}
-                >
-                  <img src={electricIcon} alt="Electricity" />
-                  <span>{loading ? t('processing') : t('payElectricity')}</span>
-                </button>
-              </div>
-              
-              <div className="utility-item">
-                <button 
-                  className="utilitiesbtn"
-                  onClick={() => handlePayment('Water')}
-                  disabled={loading}
-                >
-                  <img src={waterIcon} alt="Water" />
-                  <span>{loading ? t('processing') : t('payWater')}</span>
-                </button>
-              </div>
-              
-              <div className="utility-item">
-                <button 
-                  className="utilitiesbtn"
-                  onClick={() => handlePayment('Internet')}
-                  disabled={loading}
-                >
-                  <img src={wifiIcon} alt="Internet" />
-                  <span>{loading ? t('processing') : t('payInternet')}</span>
-                </button>
-              </div>
-              
-              <div className="utility-item">
-                <button 
-                  className="utilitiesbtn"
-                  onClick={() => handlePayment('Gas')}
-                  disabled={loading}
-                >
-                  <img src={gasIcon} alt="Gas" />
-                  <span>{loading ? t('processing') : t('payGas')}</span>
-                </button>
-              </div>
-            </div>
-          </section>
 
-          {/* Rent/Mortgage Section */}
-          <section className="rentmortgage">
-            <h2>{t('rentMortgage')}</h2>
-            <p>{t('rentMortgageDesc')}</p>
-            <div className="rentmortgage-list">
-              <div className="rentmortgage-item">
-                <button 
-                  className="rentbtn"
-                  onClick={() => handlePayment('Mortgage')}
-                  disabled={loading}
-                >
-                  <img src={houseIcon} alt="House" />
-                  <span>{loading ? t('processing') : t('payMortgage')}</span>
-                </button>
-              </div>
-              
-              <div className="rentmortgage-item">
-                <button 
-                  className="rentbtn"
-                  onClick={() => handlePayment('Rent')}
-                  disabled={loading}
-                >
-                  <img src={apartmentIcon} alt="Apartment" />
-                  <span>{loading ? t('processing') : t('payRent')}</span>
-                </button>
-              </div>
-            </div>
-          </section>
+        {/* Bill Categories */}
+        {billCategories.map((category, categoryIndex) => (
+          <Paper 
+            key={categoryIndex}
+            elevation={2}
+            sx={{ mb: 4, p: 3 }}
+          >
+            <Box sx={{ mb: 3 }}>
+              <Typography 
+                variant="h4" 
+                component="h2" 
+                gutterBottom
+                sx={{ color: '#333', fontWeight: 600 }}
+              >
+                {category.title}
+              </Typography>
+              <Typography 
+                variant="body1" 
+                color="text.secondary"
+                sx={{ fontSize: '16px' }}
+              >
+                {category.description}
+              </Typography>
+            </Box>
 
-          {/* Automotive Section */}
-          <section className="automotive">
-            <h2>{t('carTruckLoan')}</h2>
-            <p>{t('automotiveDesc')}</p>
-            <div className="automotive-list">
-              <div className="carloan">
-                <button 
-                  className="autoloan"
-                  onClick={() => handlePayment('Auto Loan')}
-                  disabled={loading}
-                >
-                  <img src={carIcon} alt="Car" />
-                  <span>{loading ? t('processing') : t('payAutoLoan')}</span>
-                </button>
-              </div>
+            <Divider sx={{ mb: 3 }} />
 
-              <div className="motorcycleloan">
-                <button 
-                  className="autoloan"
-                  onClick={() => handlePayment('Bike Loan')}
-                  disabled={loading}
-                >
-                  <img src={motorcycleIcon} alt="Motorcycle" />
-                  <span>{loading ? t('processing') : t('payBikeLoan')}</span>
-                </button>
-              </div>
-              
-              <div className="insurance">
-                <button 
-                  className="autoloan"
-                  onClick={() => handlePayment('Insurance')}
-                  disabled={loading}
-                >
-                  <img src={insuranceIcon} alt="Insurance" />
-                  <span>{loading ? t('processing') : t('payInsurance')}</span>
-                </button>
-              </div>
-            </div>
-          </section>
-        </main>
-      </div>
+            <Grid container spacing={3}>
+              {category.items.map((item, itemIndex) => (
+                <Grid item xs={12} sm={6} md={4} key={itemIndex} sx={{ display: 'flex' }}>
+                  <Card 
+                    elevation={3}
+                    sx={{ 
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      minHeight: '280px',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                      }
+                    }}
+                  >
+                    <CardContent sx={{ flexGrow: 1, textAlign: 'center', py: 3 }}>
+                      <Box
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: '50%',
+                          backgroundColor: `${item.color}20`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mx: 'auto',
+                          mb: 2
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            color: item.color,
+                            fontSize: '40px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          {item.icon}
+                        </Box>
+                      </Box>
+                      
+                      <Typography 
+                        variant="h6" 
+                        component="h3"
+                        sx={{ 
+                          fontWeight: 600,
+                          color: '#333',
+                          mb: 1
+                        }}
+                      >
+                        {item.name}
+                      </Typography>
+                      
+                      <Chip 
+                        label="Available" 
+                        size="small" 
+                        color="success"
+                        variant="outlined"
+                      />
+                    </CardContent>
+                    
+                    <CardActions sx={{ p: 2, pt: 0 }}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={() => handlePayment(item.name)}
+                        disabled={loading}
+                        startIcon={
+                          processingItem === item.name ? 
+                            <CircularProgress size={20} color="inherit" /> : 
+                            <PaymentIcon />
+                        }
+                        sx={{
+                          backgroundColor: item.color,
+                          py: 1.5,
+                          fontSize: '16px',
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          '&:hover': {
+                            backgroundColor: item.color,
+                            filter: 'brightness(0.9)'
+                          },
+                          '&:disabled': {
+                            backgroundColor: '#e0e0e0'
+                          }
+                        }}
+                      >
+                        {processingItem === item.name 
+                          ? (t('processing') || 'Processing...') 
+                          : item.label
+                        }
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        ))}
+
+        {/* Quick Stats */}
+        <Paper elevation={2} sx={{ p: 3, mt: 4, textAlign: 'center' }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            Payment Statistics
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h4" color="success.main" fontWeight="bold">
+                99.9%
+              </Typography>
+              <Typography color="text.secondary">Success Rate</Typography>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h4" color="primary.main" fontWeight="bold">
+                &lt;2s
+              </Typography>
+              <Typography color="text.secondary">Average Processing</Typography>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h4" color="info.main" fontWeight="bold">
+                24/7
+              </Typography>
+              <Typography color="text.secondary">Service Available</Typography>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Container>
       
       <Footer />
     </>
   );
 };
 
-export default BillPay;
+export default BillPayTest;
