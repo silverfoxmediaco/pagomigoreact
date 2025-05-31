@@ -78,6 +78,11 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // ADD DIRECT ADDRESS FIELD
+  address: {
+    type: String,
+    trim: true
+  },
   plaidAccounts: [{
     accountId: String,
     institutionName: String,
@@ -116,16 +121,11 @@ const User = mongoose.model('User', UserSchema);
 
 const buildPath = path.join(__dirname, 'build');
 
-console.log('Server starting from:', __dirname);
-console.log('Looking for build directory at:', buildPath);
-
 // Check if build directory exists
 if (fs.existsSync(buildPath)) {
   console.log('Build directory found');
-  console.log('Build contents:', fs.readdirSync(buildPath));
 } else {
   console.log('Build directory not found');
-  console.log('Will create a simple response for now');
 }
 
 // Middleware
@@ -155,14 +155,7 @@ const authenticateToken = (req, res, next) => {
 // EMAIL VERIFICATION ENDPOINTS (MODERN MAILGUN)
 app.post('/api/email/send-verification', async (req, res) => {
   try {
-    console.log('=== EMAIL VERIFICATION DEBUG ===');
-    console.log('Full request body:', JSON.stringify(req.body, null, 2));
-    
     const { email, name } = req.body;
-    
-    console.log('Extracted email:', email);
-    console.log('Extracted name:', name);
-    console.log('Email type:', typeof email);
     
     // Validate email format
     if (!email) {
@@ -178,25 +171,16 @@ app.post('/api/email/send-verification', async (req, res) => {
       throw new Error('Invalid email format');
     }
     
-    console.log('Mailgun credentials check:');
-    console.log('API Key exists:', !!process.env.MAILGUN_API_KEY);
-    console.log('Domain exists:', !!process.env.MAILGUN_DOMAIN);
-    console.log('Domain:', process.env.MAILGUN_DOMAIN);
-    
     // Generate 6-digit verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     
     // Store verification code temporarily (in production, use Redis or database)
-    // For now, we'll store in memory with expiration
     global.verificationCodes = global.verificationCodes || {};
     global.verificationCodes[email] = {
       code: verificationCode,
       expires: Date.now() + 10 * 60 * 1000, // 10 minutes
       attempts: 0
     };
-    
-    console.log('Generated verification code for:', email);
-    console.log('Attempting to send email...');
     
     // Prepare email content (MODERN MAILGUN API)
     const messageData = {
@@ -230,11 +214,7 @@ app.post('/api/email/send-verification', async (req, res) => {
     };
     
     // Send email via Mailgun (MODERN API)
-    const result = await mg.messages.create(process.env.MAILGUN_DOMAIN, messageData);
-    
-    console.log('Email sent successfully!');
-    console.log('Mailgun response:', result);
-    console.log('================================');
+    await mg.messages.create(process.env.MAILGUN_DOMAIN, messageData);
     
     res.json({ 
       success: true, 
@@ -243,12 +223,7 @@ app.post('/api/email/send-verification', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('=== EMAIL ERROR DETAILS ===');
-    console.error('Error message:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Full error object:', error);
-    console.error('============================');
-    
+    console.error('Email verification error:', error.message);
     res.status(500).json({ 
       success: false, 
       error: error.message
@@ -258,11 +233,7 @@ app.post('/api/email/send-verification', async (req, res) => {
 
 app.post('/api/email/verify-code', async (req, res) => {
   try {
-    console.log('=== EMAIL CODE VERIFICATION ===');
     const { email, code } = req.body;
-    
-    console.log('Email:', email);
-    console.log('Code received:', code);
     
     if (!email || !code) {
       return res.status(400).json({
@@ -311,9 +282,6 @@ app.post('/api/email/verify-code', async (req, res) => {
     // Success - clean up
     delete global.verificationCodes[email];
     
-    console.log('Email verification successful!');
-    console.log('==============================');
-    
     res.json({ 
       success: true, 
       verified: true,
@@ -321,7 +289,7 @@ app.post('/api/email/verify-code', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Email Verification Error:', error);
+    console.error('Email verification error:', error.message);
     res.status(500).json({ 
       success: false, 
       error: error.message 
@@ -331,110 +299,6 @@ app.post('/api/email/verify-code', async (req, res) => {
 
 /*
 // TWILIO VERIFY ENDPOINTS - COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
-app.post('/api/sms/send-verification', async (req, res) => {
-  try {
-    console.log('=== TWILIO SMS DEBUG ===');
-    console.log('Full request body:', JSON.stringify(req.body, null, 2));
-    console.log('Headers:', req.headers);
-    console.log('Content-Type:', req.headers['content-type']);
-    
-    const { phoneNumber } = req.body;
-    
-    console.log('Extracted phoneNumber:', phoneNumber);
-    console.log('phoneNumber type:', typeof phoneNumber);
-    console.log('phoneNumber length:', phoneNumber?.length);
-    console.log('First character:', phoneNumber?.[0]);
-    console.log('Last character:', phoneNumber?.[phoneNumber?.length - 1]);
-    
-    // Validate phone number format
-    if (!phoneNumber) {
-      throw new Error('Phone number is required');
-    }
-    
-    if (typeof phoneNumber !== 'string') {
-      throw new Error('Phone number must be a string');
-    }
-    
-    if (!phoneNumber.startsWith('+')) {
-      throw new Error('Phone number must include country code with + prefix');
-    }
-    
-    if (phoneNumber.length < 10 || phoneNumber.length > 15) {
-      throw new Error('Phone number length is invalid');
-    }
-    
-    console.log('Twilio credentials check:');
-    console.log('Account SID exists:', !!process.env.TWILIO_ACCOUNT_SID);
-    console.log('Auth Token exists:', !!process.env.TWILIO_AUTH_TOKEN);
-    console.log('Verify Service ID exists:', !!process.env.TWILIO_VERIFY_SERVICE_ID);
-    console.log('Verify Service ID:', process.env.TWILIO_VERIFY_SERVICE_ID);
-    
-    console.log('Attempting Twilio verification...');
-    
-    const verification = await client.verify.v2.services(process.env.TWILIO_VERIFY_SERVICE_ID)
-      .verifications
-      .create({
-        to: phoneNumber,
-        channel: 'sms'
-      });
-    
-    console.log('Verification successful!');
-    console.log('Verification SID:', verification.sid);
-    console.log('Verification status:', verification.status);
-    console.log('========================');
-    
-    res.json({ 
-      success: true, 
-      status: verification.status,
-      sid: verification.sid
-    });
-    
-  } catch (error) {
-    console.error('=== TWILIO ERROR DETAILS ===');
-    console.error('Error message:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Error status:', error.status);
-    console.error('Error moreInfo:', error.moreInfo);
-    console.error('Full error object:', error);
-    console.error('Error stack:', error.stack);
-    console.error('===========================');
-    
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      code: error.code,
-      details: error.moreInfo || 'No additional details'
-    });
-  }
-});
-
-app.post('/api/sms/verify-code', async (req, res) => {
-  try {
-    const { phoneNumber, code } = req.body;
-    
-    const verificationCheck = await client.verify.v2.services(process.env.TWILIO_VERIFY_SERVICE_ID)
-      .verificationChecks
-      .create({
-        to: phoneNumber,
-        code: code
-      });
-    
-    console.log(`Verification check: ${verificationCheck.status}`);
-    
-    res.json({ 
-      success: true, 
-      verified: verificationCheck.status === 'approved',
-      status: verificationCheck.status
-    });
-    
-  } catch (error) {
-    console.error('Verification Error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
-  }
-});
 */
 
 // USER ACCOUNT CREATION (PRODUCTION READY)
@@ -496,7 +360,7 @@ app.post('/api/auth/signup', async (req, res) => {
       phone: phone ? phone.trim() : null,
       phoneVerified: phoneVerified || false,
       emailVerified: emailVerified || false,
-      balance: 0 // Initialize balance to 0
+      balance: 0
     });
     
     await newUser.save();
@@ -524,8 +388,6 @@ app.post('/api/auth/signup', async (req, res) => {
       createdAt: newUser.createdAt
     };
     
-    console.log('New user created:', userResponse.username);
-    
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
@@ -534,7 +396,7 @@ app.post('/api/auth/signup', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Signup Error:', error);
+    console.error('Signup error:', error.message);
     
     // Handle MongoDB validation errors
     if (error.name === 'ValidationError') {
@@ -562,29 +424,17 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-// USER PROFILE ENDPOINT (FIXED TO MATCH FRONTEND EXPECTATIONS)
+// USER PROFILE ENDPOINT (FIXED ADDRESS MAPPING)
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {
-    console.log('=== FETCHING USER PROFILE ===');
-    console.log('User ID from token:', req.user.userId);
-    
     const user = await User.findById(req.user.userId).select('-password');
     
     if (!user) {
-      console.log('User not found');
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
-    console.log('User found in database:', {
-      id: user._id,
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      phone: user.phone
-    });
     
     // Format the response to match what your frontend expects
     const profileData = {
@@ -593,20 +443,22 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
       phone: user.phone,
       phone_verified: user.phoneVerified,
       email: user.email,
-      address: user.profile?.address?.street || 'Not provided',
+      // Try multiple possible address locations
+      address: user.address || 
+               user.profile?.address?.street || 
+               user.profile?.address || 
+               (user.profile?.address?.street ? 
+                 `${user.profile.address.street}, ${user.profile.address.city}, ${user.profile.address.state}` : 
+                 'Not provided'),
       kyc_status: user.personaVerified ? 'completed' : 'pending',
-      balance: user.balance || 0, // Default to 0 instead of undefined
+      balance: user.balance || 0,
       createdAt: user.createdAt
     };
     
-    console.log('Sending profile data:', profileData);
-    console.log('===============================');
-    
-    // Send the data directly (not wrapped in a 'user' object)
     res.json(profileData);
     
   } catch (error) {
-    console.error('Profile Error:', error);
+    console.error('Profile fetch error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch profile',
@@ -615,14 +467,38 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// UPDATE USER PROFILE (for adding phone, etc.)
+// UPDATE USER PROFILE (FIXED TO HANDLE ALL FIELDS INCLUDING ADDRESS)
 app.put('/api/user/profile', authenticateToken, async (req, res) => {
   try {
-    const { email, phone, profile } = req.body;
+    const { name, username, email, phone, address, profile } = req.body;
     const userId = req.user.userId;
     
     const updateData = {};
     
+    // Handle name update
+    if (name) {
+      updateData.name = name.trim();
+    }
+    
+    // Handle username update
+    if (username) {
+      // Check if username already exists
+      const existingUser = await User.findOne({ 
+        username: username.toLowerCase(),
+        _id: { $ne: userId }
+      });
+      
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Username already exists'
+        });
+      }
+      
+      updateData.username = username.toLowerCase().trim();
+    }
+    
+    // Handle email update
     if (email) {
       // Check if email already exists
       const existingUser = await User.findOne({ 
@@ -640,6 +516,7 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
       updateData.email = email.toLowerCase().trim();
     }
     
+    // Handle phone update
     if (phone) {
       // Check if phone already exists
       const existingUser = await User.findOne({ 
@@ -657,6 +534,12 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
       updateData.phone = phone.trim();
     }
     
+    // Handle address update
+    if (address !== undefined) {
+      updateData.address = address.trim();
+    }
+    
+    // Handle profile object update
     if (profile) {
       updateData.profile = { ...updateData.profile, ...profile };
     }
@@ -674,7 +557,7 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Profile Update Error:', error);
+    console.error('Profile update error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Failed to update profile',
@@ -747,7 +630,7 @@ app.post('/api/auth/login', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Login Error:', error);
+    console.error('Login error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Login failed',
@@ -755,24 +638,6 @@ app.post('/api/auth/login', async (req, res) => {
     });
   }
 });
-
-/*
-// TWILIO WEBHOOK HANDLER - COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
-app.post('/api/sms/webhook', (req, res) => {
-  console.log('Twilio webhook received:', req.body);
-  const { From, Body, MessageSid, MessageStatus } = req.body;
-  
-  if (MessageStatus) {
-    console.log(`Message ${MessageSid} status: ${MessageStatus}`);
-  }
-  
-  if (Body && Body.toUpperCase().includes('STOP')) {
-    console.log(`Opt-out request from ${From}`);
-  }
-  
-  res.status(200).send('OK');
-});
-*/
 
 // Serve static files if build exists
 if (fs.existsSync(buildPath)) {
@@ -793,17 +658,6 @@ app.get('/api/email/test', (req, res) => {
     mailgunVersion: 'modern mailgun.js'
   });
 });
-
-/*
-// SMS TEST ENDPOINT - COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
-app.get('/api/sms/test', (req, res) => {
-  res.json({ 
-    message: 'Twilio SMS API is ready!',
-    twilioNumber: '+12147613175',
-    hasCredentials: !!(accountSid && authToken)
-  });
-});
-*/
 
 // Serve the React app or a fallback message
 app.use(function(req, res) {
@@ -832,5 +686,4 @@ app.listen(PORT, function() {
   console.log('Mailgun Email endpoints ready');
   console.log('Auth endpoints ready');
   console.log('User profile endpoints ready');
-  // console.log('Twilio SMS endpoints ready'); // COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
 });
