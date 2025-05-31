@@ -1,6 +1,5 @@
 // src/components/UserProfile/EditProfileModal.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useUserProfile } from '../../hooks/useUserProfile';
 import styles from '../../styles/EditProfileModal.module.css';
 
 const EditProfileModal = ({ isOpen, onClose, userData }) => {
@@ -13,8 +12,10 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
   });
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
-  const { updateProfile, loading, error, success } = useUserProfile();
   const modalRef = useRef(null);
   const phoneInputRef = useRef(null);
 
@@ -23,17 +24,15 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
     if (isOpen) {
       console.log('Modal opening - starting animation');
       setShouldRender(true);
-      // Small delay to ensure DOM is ready before starting animation
       setTimeout(() => {
         setIsAnimating(true);
       }, 10);
     } else {
       console.log('Modal closing - starting close animation');
       setIsAnimating(false);
-      // Wait for animation to complete before unmounting
       setTimeout(() => {
         setShouldRender(false);
-      }, 300); // Match the CSS transition duration
+      }, 300);
     }
   }, [isOpen]);
 
@@ -49,40 +48,6 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
       });
     }
   }, [userData]);
-
-  // Initialize intl-tel-input on mount
-  useEffect(() => {
-    if (shouldRender && phoneInputRef.current) {
-      try {
-        // Check if intlTelInput is available
-        if (window.intlTelInput) {
-          const iti = window.intlTelInput(phoneInputRef.current, {
-            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
-            preferredCountries: ['us', 'ca', 'mx'],
-            separateDialCode: true,
-            initialCountry: 'us'
-          });
-          
-          // Set initial value
-          if (formData.phone) {
-            iti.setNumber(formData.phone);
-          }
-          
-          // Store the instance for later use
-          phoneInputRef.current.iti = iti;
-          
-          // Return cleanup function
-          return () => {
-            if (phoneInputRef.current && phoneInputRef.current.iti) {
-              phoneInputRef.current.iti.destroy();
-            }
-          };
-        }
-      } catch (error) {
-        console.error('Error initializing phone input:', error);
-      }
-    }
-  }, [shouldRender, formData.phone]);
 
   // Handle click outside modal to close
   useEffect(() => {
@@ -125,48 +90,91 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
     });
   };
 
+  // Custom updateProfile function that calls your API directly
+  const updateProfile = async (profileData) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      console.log('Updating profile with data:', profileData);
+
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(profileData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+
+      const result = await response.json();
+      console.log('Profile update result:', result);
+      
+      return { success: true, data: result };
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    
     console.log('Form submitted with data:', formData);
     
-    // Get formatted phone number from intl-tel-input if available
-    let profileData = { ...formData };
-    if (phoneInputRef.current && phoneInputRef.current.iti) {
-      profileData.phone = phoneInputRef.current.iti.getNumber();
-      console.log('Phone number from intl-tel-input:', profileData.phone);
+    // Basic validation
+    if (!formData.name || !formData.username || !formData.email) {
+      setError('Name, username, and email are required');
+      setLoading(false);
+      return;
     }
     
-    const result = await updateProfile(profileData);
-    console.log('Update profile result:', result);
-    
-    if (result.success) {
-      console.log('Profile updated successfully, closing modal');
-      onClose();
+    try {
+      const result = await updateProfile(formData);
+      
+      if (result.success) {
+        setSuccess('Profile updated successfully!');
+        console.log('Profile updated successfully, closing modal in 1.5s');
+        
+        setTimeout(() => {
+          onClose();
+          // Trigger a page reload to refresh the dashboard data
+          window.location.reload();
+        }, 1500);
+      } else {
+        setError(result.error || 'Failed to update profile');
+      }
+    } catch (err) {
+      setError('Failed to update profile. Please try again.');
+      console.error('Submit error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   if (!shouldRender) {
-    console.log('Modal NOT rendering - shouldRender is false');
     return null;
   }
-
-  console.log('Modal SHOULD be rendering now!');
-  console.log('Modal props:', { isOpen, shouldRender, isAnimating, userData: !!userData });
-  console.log('CSS styles object:', styles);
-  console.log('Form data:', formData);
 
   return (
     <div 
       className={styles['edit-profile-overlay']}
-      onClick={() => console.log('Overlay clicked!')}
     >
       <div 
         className={`${styles['edit-profile-container']} ${isAnimating ? styles['slide-up'] : ''}`}
         ref={modalRef}
-        onClick={(e) => {
-          e.stopPropagation();
-          console.log('Modal container clicked!');
-        }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className={styles['edit-profile-handle']}>
           <div className={styles['handle-bar']}></div>
@@ -176,10 +184,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
           <h2>Edit Profile</h2>
           <button 
             className={styles['close-button']} 
-            onClick={() => {
-              console.log('Close button clicked');
-              onClose();
-            }}
+            onClick={onClose}
           >
             &times;
           </button>
@@ -199,6 +204,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Enter your full name"
+                required
               />
             </div>
             
@@ -211,6 +217,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
                 value={formData.username}
                 onChange={handleChange}
                 placeholder="Choose a username"
+                required
               />
             </div>
             
@@ -223,6 +230,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
+                required
               />
             </div>
             
@@ -233,7 +241,7 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
                 id="edit-phone"
                 name="phone"
                 ref={phoneInputRef}
-                defaultValue={formData.phone}
+                value={formData.phone}
                 onChange={handleChange}
                 placeholder="Enter your phone number"
               />
