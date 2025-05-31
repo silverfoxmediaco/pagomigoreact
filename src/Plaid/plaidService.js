@@ -1,121 +1,136 @@
-// src/services/plaidService.js
-const API_BASE = process.env.REACT_APP_API_BASE_URL || '';
+// src/hooks/plaidService.js
+const API_BASE = process.env.REACT_APP_API_BASE || '';
 
-// Regular Plaid Link functions (for bank connections)
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+};
+
+// Helper function to handle API responses
+const handleResponse = async (response) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+};
+
+// Create link token for bank connection
 export const createLinkToken = async () => {
-  const response = await fetch(`${API_BASE}/api/plaid/link-token`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      'Content-Type': 'application/json'
-    }
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to create link token');
+  try {
+    const response = await fetch(`${API_BASE}/api/plaid/link-token`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    
+    const data = await handleResponse(response);
+    return data.link_token; // Changed from linkToken to link_token
+  } catch (error) {
+    console.error('Error creating link token:', error);
+    throw error;
   }
-  
-  const data = await response.json();
-  return data.link_token;
 };
 
-export const exchangePublicToken = async (publicToken, institutionName) => {
-  const response = await fetch(`${API_BASE}/api/plaid/exchange-token`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ 
-      public_token: publicToken,
-      institution_name: institutionName 
-    })
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to exchange public token');
-  }
-  
-  return response.json();
-};
-
-export const getConnectedAccounts = async () => {
-  const response = await fetch(`${API_BASE}/api/plaid/accounts`, {
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    }
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to get connected accounts');
-  }
-  
-  const data = await response.json();
-  return data.accounts || [];
-};
-
-export const getAccountBalance = async (accountId) => {
-  const response = await fetch(`${API_BASE}/api/plaid/accounts/${accountId}/balance`, {
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    }
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to get account balance');
-  }
-  
-  const data = await response.json();
-  return data.balance;
-};
-
-// Identity Verification functions
+// Create identity verification link token
 export const createIdvLinkToken = async () => {
-  const response = await fetch(`${API_BASE}/api/plaid/identity-verification/create`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      'Content-Type': 'application/json'
-    }
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('IDV Link Token Error:', response.status, errorText);
-    throw new Error('Failed to create identity verification link token');
+  try {
+    const response = await fetch(`${API_BASE}/api/plaid/identity-verification/create`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    
+    const data = await handleResponse(response);
+    return data.link_token; // Changed from linkToken to link_token
+  } catch (error) {
+    console.error('Error creating IDV link token:', error);
+    throw error;
   }
-  
-  const data = await response.json();
-  return data.link_token;
 };
 
+// Exchange public token for access token
+export const exchangePublicToken = async (publicToken, institutionName) => {
+  try {
+    const response = await fetch(`${API_BASE}/api/plaid/exchange-token`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ 
+        public_token: publicToken, // Changed to match backend expectation
+        institution_name: institutionName // Changed to match backend expectation
+      })
+    });
+    
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Error exchanging public token:', error);
+    throw error;
+  }
+};
+
+// Complete identity verification
 export const completeIdentityVerification = async (identityVerificationId) => {
-  const response = await fetch(`${API_BASE}/api/plaid/identity-verification/complete`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ identity_verification_id: identityVerificationId })
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to complete identity verification');
+  try {
+    const response = await fetch(`${API_BASE}/api/plaid/identity-verification/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ 
+        identity_verification_id: identityVerificationId // Changed to match backend expectation
+      })
+    });
+    
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Error completing identity verification:', error);
+    throw error;
   }
-  
-  return response.json();
 };
 
+// Get verification status
 export const getVerificationStatus = async () => {
-  const response = await fetch(`${API_BASE}/api/plaid/identity-verification/status`, {
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    }
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to get verification status');
+  try {
+    const response = await fetch(`${API_BASE}/api/plaid/identity-verification/status`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Error getting verification status:', error);
+    throw error;
   }
-  
-  return response.json();
+};
+
+// Get connected accounts
+export const getConnectedAccounts = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/api/plaid/accounts`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    
+    const data = await handleResponse(response);
+    return data.accounts || [];
+  } catch (error) {
+    console.error('Error getting connected accounts:', error);
+    throw error;
+  }
+};
+
+// Get account balance
+export const getAccountBalance = async (accountId) => {
+  try {
+    const response = await fetch(`${API_BASE}/api/plaid/accounts/${accountId}/balance`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    
+    const data = await handleResponse(response);
+    return data.balance;
+  } catch (error) {
+    console.error('Error getting account balance:', error);
+    throw error;
+  }
 };

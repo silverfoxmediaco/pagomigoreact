@@ -83,12 +83,22 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  // UPDATED PLAID ACCOUNTS WITH COMPLETE FIELDS
   plaidAccounts: [{
-    accountId: String,
+    accessToken: String,
+    itemId: String,
     institutionName: String,
+    accountId: String,
     accountType: String,
     linkedAt: { type: Date, default: Date.now }
   }],
+  // NEW PLAID IDENTITY VERIFICATION FIELDS
+  plaidIdentityVerificationId: String,
+  plaidIdentityStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'failed', 'pending_review'],
+    default: 'pending'
+  },
   personaVerified: {
     type: Boolean,
     default: false

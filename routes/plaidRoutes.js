@@ -1,5 +1,7 @@
 // routes/plaidRoutes.js
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const router = express.Router();
 const { PlaidApi, Configuration, PlaidEnvironments } = require('plaid');
 
@@ -16,24 +18,37 @@ const configuration = new Configuration({
 
 const plaidClient = new PlaidApi(configuration);
 
-// You'll need to import your auth middleware and User model
-// Adjust these paths based on your project structure
-// const requireAuth = require('../middleware/requireAuth');
-// const User = require('../models/User');
+// Import User model (adjust path based on your structure)
+// For now, we'll define it inline since your User model is in server.js
+const getUserModel = () => {
+  return mongoose.model('User');
+};
 
-// Temporary: Skip auth for testing
-const requireAuth = (req, res, next) => {
-  // TODO: Replace with your actual auth middleware
-  req.user = { id: 'test-user-id' };
-  next();
+// JWT Authentication Middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+    req.user = { userId: user.userId }; // Use userId to match your JWT structure
+    next();
+  });
 };
 
 // ============ IDENTITY VERIFICATION ENDPOINTS ============
 
-// Create identity verification link token (Original endpoint - keep for compatibility)
-router.post('/create-idv-link-token', requireAuth, async (req, res) => {
+// Create identity verification link token
+router.post('/identity-verification/create', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
+    console.log('Creating IDV link token for user:', userId);
     
     // Create the identity verification session first
     const idvResponse = await plaidClient.identityVerificationCreate({
@@ -45,11 +60,13 @@ router.post('/create-idv-link-token', requireAuth, async (req, res) => {
       }
     });
 
+    console.log('IDV session created:', idvResponse.data.id);
+
     // Then create link token for the identity verification
     const linkTokenResponse = await plaidClient.linkTokenCreate({
       products: ['identity_verification'],
       client_name: 'Pagomigo',
-      country_codes: ['US', 'CA'],
+      country_codes: process.env.PLAID_COUNTRY_CODES.split(','),
       language: 'en',
       identity_verification: {
         identity_verification_id: idvResponse.data.id
@@ -59,65 +76,37 @@ router.post('/create-idv-link-token', requireAuth, async (req, res) => {
       }
     });
 
-    // TODO: Save the identity verification ID to your database
-    // await User.findByIdAndUpdate(userId, { 
-    //   plaid_identity_verification_id: idvResponse.data.id 
-    // });
+    // Save the identity verification ID to your database
+    const User = getUserModel();
+    await User.findByIdAndUpdate(userId, { 
+      plaidIdentityVerificationId: idvResponse.data.id,
+      plaidIdentityStatus: 'pending'
+    });
 
     console.log('IDV Link token created successfully');
     res.json({ link_token: linkTokenResponse.data.link_token });
   } catch (error) {
     console.error('Error creating identity verification:', error);
-    res.status(500).json({ error: 'Failed to create identity verification' });
-  }
-});
-
-// Create identity verification link token (New REST-style endpoint)
-router.post('/identity-verification/create', requireAuth, async (req, res) => {
-  try {
-    const userId = req.user.id;
     
-    // Create the identity verification session first
-    const idvResponse = await plaidClient.identityVerificationCreate({
-      is_shareable: true,
-      template_id: 'idvtmp_4FrXJvfQU3zGUR', // Plaid's default template
-      gave_consent: true,
-      user: {
-        client_user_id: userId.toString(),
-      }
-    });
-
-    // Then create link token for the identity verification
-    const linkTokenResponse = await plaidClient.linkTokenCreate({
-      products: ['identity_verification'],
-      client_name: 'Pagomigo',
-      country_codes: ['US', 'CA'],
-      language: 'en',
-      identity_verification: {
-        identity_verification_id: idvResponse.data.id
-      },
-      user: {
-        client_user_id: userId.toString()
-      }
-    });
-
-    // TODO: Save the identity verification ID to your database
-    // await User.findByIdAndUpdate(userId, { 
-    //   plaid_identity_verification_id: idvResponse.data.id 
-    // });
-
-    console.log('IDV Link token created successfully');
-    res.json({ link_token: linkTokenResponse.data.link_token });
-  } catch (error) {
-    console.error('Error creating identity verification:', error);
+    // Handle Plaid-specific errors
+    if (error.response?.data) {
+      console.error('Plaid error details:', error.response.data);
+      return res.status(400).json({ 
+        error: 'Plaid error: ' + (error.response.data.error_message || 'Unknown error')
+      });
+    }
+    
     res.status(500).json({ error: 'Failed to create identity verification' });
   }
 });
 
-// Complete identity verification (Original endpoint - keep for compatibility)
-router.post('/complete-idv', requireAuth, async (req, res) => {
+// Complete identity verification
+router.post('/identity-verification/complete', authenticateToken, async (req, res) => {
   try {
     const { identity_verification_id } = req.body;
+    const userId = req.user.userId;
+    
+    console.log('Completing identity verification:', identity_verification_id);
     
     if (!identity_verification_id) {
       return res.status(400).json({ error: 'Identity verification ID is required' });
@@ -129,103 +118,113 @@ router.post('/complete-idv', requireAuth, async (req, res) => {
     });
 
     const status = idvResponse.data.status;
+    const steps = idvResponse.data.steps;
     
-    // TODO: Update user's verification status in your database
-    // await User.findByIdAndUpdate(req.user.id, { 
-    //   plaid_identity_status: status === 'success' ? 'approved' : status 
-    // });
+    console.log('IDV Status:', status);
+    console.log('IDV Steps:', steps);
+    
+    // Map Plaid status to your application status
+    let appStatus = 'pending';
+    if (status === 'success') {
+      appStatus = 'approved';
+    } else if (status === 'failed') {
+      appStatus = 'failed';
+    } else if (status === 'pending_review') {
+      appStatus = 'pending_review';
+    }
+    
+    // Update user's verification status in your database
+    const User = getUserModel();
+    await User.findByIdAndUpdate(userId, { 
+      plaidIdentityStatus: appStatus,
+      plaidIdentityVerificationId: identity_verification_id,
+      personaVerified: appStatus === 'approved' // Update the main verification flag
+    });
 
-    console.log(`Identity verification completed with status: ${status}`);
+    console.log(`Identity verification completed with status: ${status} -> ${appStatus}`);
     
     res.json({ 
-      status: status,
-      message: status === 'success' ? 'Identity verification completed successfully' : 'Identity verification submitted for review'
+      status: appStatus,
+      plaid_status: status,
+      message: status === 'success' ? 
+        'Identity verification completed successfully!' : 
+        'Identity verification submitted for review'
     });
   } catch (error) {
     console.error('Error completing identity verification:', error);
+    
+    if (error.response?.data) {
+      console.error('Plaid error details:', error.response.data);
+      return res.status(400).json({ 
+        error: 'Plaid error: ' + (error.response.data.error_message || 'Unknown error')
+      });
+    }
+    
     res.status(500).json({ error: 'Failed to complete identity verification' });
   }
 });
 
-// Complete identity verification (New REST-style endpoint)
-router.post('/identity-verification/complete', requireAuth, async (req, res) => {
+// Get identity verification status
+router.get('/identity-verification/status', authenticateToken, async (req, res) => {
   try {
-    const { identity_verification_id } = req.body;
+    const userId = req.user.userId;
     
-    if (!identity_verification_id) {
-      return res.status(400).json({ error: 'Identity verification ID is required' });
+    // Get the identity verification ID from your database
+    const User = getUserModel();
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const idvId = user.plaidIdentityVerificationId;
+    
+    // If no IDV session exists, return pending
+    if (!idvId) {
+      return res.json({ 
+        status: user.plaidIdentityStatus || 'pending',
+        message: 'No identity verification session found'
+      });
     }
 
-    // Get the current status of the identity verification
-    const idvResponse = await plaidClient.identityVerificationGet({
-      identity_verification_id: identity_verification_id
-    });
+    try {
+      // Get current status from Plaid
+      const idvResponse = await plaidClient.identityVerificationGet({
+        identity_verification_id: idvId
+      });
 
-    const status = idvResponse.data.status;
-    
-    // TODO: Update user's verification status in your database
-    // await User.findByIdAndUpdate(req.user.id, { 
-    //   plaid_identity_status: status === 'success' ? 'approved' : status 
-    // });
+      const plaidStatus = idvResponse.data.status;
+      
+      // Map Plaid status to app status
+      let appStatus = 'pending';
+      if (plaidStatus === 'success') {
+        appStatus = 'approved';
+      } else if (plaidStatus === 'failed') {
+        appStatus = 'failed';
+      } else if (plaidStatus === 'pending_review') {
+        appStatus = 'pending_review';
+      }
+      
+      // Update database if status changed
+      if (user.plaidIdentityStatus !== appStatus) {
+        await User.findByIdAndUpdate(userId, { 
+          plaidIdentityStatus: appStatus,
+          personaVerified: appStatus === 'approved'
+        });
+      }
 
-    console.log(`Identity verification completed with status: ${status}`);
-    
-    res.json({ 
-      status: status,
-      message: status === 'success' ? 'Identity verification completed successfully' : 'Identity verification submitted for review'
-    });
-  } catch (error) {
-    console.error('Error completing identity verification:', error);
-    res.status(500).json({ error: 'Failed to complete identity verification' });
-  }
-});
-
-// Get identity verification status (Original endpoint - keep for compatibility)
-router.get('/verification-status', requireAuth, async (req, res) => {
-  try {
-    // TODO: Get the identity verification ID from your database
-    // const user = await User.findById(req.user.id);
-    // const idvId = user.plaid_identity_verification_id;
-    
-    // For now, return pending status
-    // if (!idvId) {
-    //   return res.json({ status: 'pending' });
-    // }
-
-    // const idvResponse = await plaidClient.identityVerificationGet({
-    //   identity_verification_id: idvId
-    // });
-
-    // res.json({ status: idvResponse.data.status });
-    
-    // Temporary response for testing
-    res.json({ status: 'pending' });
-  } catch (error) {
-    console.error('Error getting identity verification status:', error);
-    res.status(500).json({ error: 'Failed to get verification status' });
-  }
-});
-
-// Get identity verification status (New REST-style endpoint)
-router.get('/identity-verification/status', requireAuth, async (req, res) => {
-  try {
-    // TODO: Get the identity verification ID from your database
-    // const user = await User.findById(req.user.id);
-    // const idvId = user.plaid_identity_verification_id;
-    
-    // For now, return pending status
-    // if (!idvId) {
-    //   return res.json({ status: 'pending' });
-    // }
-
-    // const idvResponse = await plaidClient.identityVerificationGet({
-    //   identity_verification_id: idvId
-    // });
-
-    // res.json({ status: idvResponse.data.status });
-    
-    // Temporary response for testing
-    res.json({ status: 'pending' });
+      res.json({ 
+        status: appStatus,
+        plaid_status: plaidStatus
+      });
+    } catch (plaidError) {
+      // If Plaid call fails, return cached status
+      console.error('Error fetching from Plaid, using cached status:', plaidError);
+      res.json({ 
+        status: user.plaidIdentityStatus || 'pending',
+        message: 'Using cached status'
+      });
+    }
   } catch (error) {
     console.error('Error getting identity verification status:', error);
     res.status(500).json({ error: 'Failed to get verification status' });
@@ -235,49 +234,48 @@ router.get('/identity-verification/status', requireAuth, async (req, res) => {
 // ============ REGULAR PLAID ENDPOINTS (Bank Connections) ============
 
 // Create link token for bank connections
-router.post('/create-link-token', requireAuth, async (req, res) => {
+router.post('/link-token', authenticateToken, async (req, res) => {
   try {
+    const userId = req.user.userId;
+    
     const linkTokenResponse = await plaidClient.linkTokenCreate({
-      products: ['transactions', 'identity'],
+      products: process.env.PLAID_PRODUCTS.split(','),
       client_name: 'Pagomigo',
-      country_codes: ['US', 'CA'],
+      country_codes: process.env.PLAID_COUNTRY_CODES.split(','),
       language: 'en',
+      webhook: process.env.PLAID_WEBHOOKS,
       user: {
-        client_user_id: req.user.id.toString()
+        client_user_id: userId.toString()
       }
     });
 
+    console.log('Link token created for bank connection');
     res.json({ link_token: linkTokenResponse.data.link_token });
   } catch (error) {
     console.error('Error creating link token:', error);
-    res.status(500).json({ error: 'Failed to create link token' });
-  }
-});
-
-// Create link token for bank connections (Alternative endpoint name)
-router.post('/link-token', requireAuth, async (req, res) => {
-  try {
-    const linkTokenResponse = await plaidClient.linkTokenCreate({
-      products: ['transactions', 'identity'],
-      client_name: 'Pagomigo',
-      country_codes: ['US', 'CA'],
-      language: 'en',
-      user: {
-        client_user_id: req.user.id.toString()
-      }
-    });
-
-    res.json({ link_token: linkTokenResponse.data.link_token });
-  } catch (error) {
-    console.error('Error creating link token:', error);
+    
+    if (error.response?.data) {
+      console.error('Plaid error details:', error.response.data);
+      return res.status(400).json({ 
+        error: 'Plaid error: ' + (error.response.data.error_message || 'Unknown error')
+      });
+    }
+    
     res.status(500).json({ error: 'Failed to create link token' });
   }
 });
 
 // Exchange public token for access token
-router.post('/exchange-token', requireAuth, async (req, res) => {
+router.post('/exchange-token', authenticateToken, async (req, res) => {
   try {
     const { public_token, institution_name } = req.body;
+    const userId = req.user.userId;
+
+    if (!public_token) {
+      return res.status(400).json({ error: 'Public token is required' });
+    }
+
+    console.log('Exchanging public token for access token');
 
     const exchangeResponse = await plaidClient.itemPublicTokenExchange({
       public_token: public_token
@@ -285,64 +283,202 @@ router.post('/exchange-token', requireAuth, async (req, res) => {
 
     const { access_token, item_id } = exchangeResponse.data;
 
-    // TODO: Save access_token and item_id to your database
+    // Get account information
+    const accountsResponse = await plaidClient.accountsGet({
+      access_token: access_token
+    });
+
+    const accounts = accountsResponse.data.accounts;
+    console.log(`Found ${accounts.length} accounts for institution: ${institution_name}`);
+
+    // Save access_token and account info to your database
+    const User = getUserModel();
+    await User.findByIdAndUpdate(userId, {
+      $push: {
+        plaidAccounts: {
+          accessToken: access_token,
+          itemId: item_id,
+          institutionName: institution_name || 'Unknown Bank',
+          accountId: accounts[0]?.account_id, // Primary account
+          accountType: accounts[0]?.type,
+          linkedAt: new Date()
+        }
+      }
+    });
+
     console.log('Bank account connected successfully');
     
     res.json({ 
       success: true, 
-      message: 'Bank account connected successfully' 
+      message: 'Bank account connected successfully',
+      accounts: accounts.map(acc => ({
+        id: acc.account_id,
+        name: acc.name,
+        mask: acc.mask,
+        type: acc.type,
+        subtype: acc.subtype
+      }))
     });
   } catch (error) {
     console.error('Error exchanging token:', error);
+    
+    if (error.response?.data) {
+      console.error('Plaid error details:', error.response.data);
+      return res.status(400).json({ 
+        error: 'Plaid error: ' + (error.response.data.error_message || 'Unknown error')
+      });
+    }
+    
     res.status(500).json({ error: 'Failed to connect bank account' });
   }
 });
 
 // Get connected accounts
-router.get('/accounts', requireAuth, async (req, res) => {
+router.get('/accounts', authenticateToken, async (req, res) => {
   try {
-    // TODO: Get user's Plaid tokens from database and fetch accounts
-    // For now, return empty array
-    res.json({ accounts: [] });
+    const userId = req.user.userId;
+    
+    // Get user's Plaid tokens from database
+    const User = getUserModel();
+    const user = await User.findById(userId);
+    
+    if (!user || !user.plaidAccounts || user.plaidAccounts.length === 0) {
+      return res.json({ accounts: [] });
+    }
+
+    const allAccounts = [];
+    
+    // Fetch accounts for each connected institution
+    for (const plaidAccount of user.plaidAccounts) {
+      try {
+        const accountsResponse = await plaidClient.accountsGet({
+          access_token: plaidAccount.accessToken
+        });
+        
+        const accounts = accountsResponse.data.accounts.map(acc => ({
+          id: acc.account_id,
+          name: acc.name,
+          institution: plaidAccount.institutionName,
+          mask: acc.mask,
+          type: acc.type,
+          subtype: acc.subtype,
+          linkedAt: plaidAccount.linkedAt
+        }));
+        
+        allAccounts.push(...accounts);
+      } catch (accountError) {
+        console.error(`Error fetching accounts for ${plaidAccount.institutionName}:`, accountError);
+        // Continue with other accounts if one fails
+      }
+    }
+    
+    res.json({ accounts: allAccounts });
   } catch (error) {
     console.error('Error getting accounts:', error);
     res.status(500).json({ error: 'Failed to get accounts' });
   }
 });
 
-// Get account balance (with accountId parameter)
-router.get('/balance/:accountId', requireAuth, async (req, res) => {
+// Get account balance
+router.get('/accounts/:accountId/balance', authenticateToken, async (req, res) => {
   try {
     const { accountId } = req.params;
+    const userId = req.user.userId;
     
-    // TODO: Implement balance fetching
+    // Find the access token for this account
+    const User = getUserModel();
+    const user = await User.findById(userId);
+    
+    if (!user || !user.plaidAccounts) {
+      return res.status(404).json({ error: 'No connected accounts found' });
+    }
+
+    let accessToken = null;
+    
+    // Find the correct access token by checking each account
+    for (const plaidAccount of user.plaidAccounts) {
+      try {
+        const accountsResponse = await plaidClient.accountsGet({
+          access_token: plaidAccount.accessToken
+        });
+        
+        const account = accountsResponse.data.accounts.find(acc => acc.account_id === accountId);
+        if (account) {
+          accessToken = plaidAccount.accessToken;
+          break;
+        }
+      } catch (err) {
+        // Continue searching in other accounts
+        continue;
+      }
+    }
+    
+    if (!accessToken) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    // Get balance for the specific account
+    const balanceResponse = await plaidClient.accountsBalanceGet({
+      access_token: accessToken,
+      options: {
+        account_ids: [accountId]
+      }
+    });
+
+    const account = balanceResponse.data.accounts[0];
+    
+    if (!account) {
+      return res.status(404).json({ error: 'Account balance not found' });
+    }
+
     res.json({
       balance: {
-        current: 0,
-        available: 0
+        current: account.balances.current,
+        available: account.balances.available,
+        currency: account.balances.iso_currency_code || 'USD'
       }
     });
   } catch (error) {
     console.error('Error getting account balance:', error);
+    
+    if (error.response?.data) {
+      console.error('Plaid error details:', error.response.data);
+      return res.status(400).json({ 
+        error: 'Plaid error: ' + (error.response.data.error_message || 'Unknown error')
+      });
+    }
+    
     res.status(500).json({ error: 'Failed to get account balance' });
   }
 });
 
-// Get account balance (alternative endpoint structure)
-router.get('/accounts/:accountId/balance', requireAuth, async (req, res) => {
+// Webhook handler for Plaid events
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
-    const { accountId } = req.params;
+    const { webhook_type, webhook_code, item_id } = req.body;
     
-    // TODO: Implement balance fetching
-    res.json({
-      balance: {
-        current: 0,
-        available: 0
-      }
-    });
+    console.log('Plaid webhook received:', { webhook_type, webhook_code, item_id });
+    
+    // Handle different webhook types
+    switch (webhook_type) {
+      case 'ITEM':
+        console.log(`Item webhook: ${webhook_code} for item ${item_id}`);
+        break;
+      case 'TRANSACTIONS':
+        console.log(`Transactions webhook: ${webhook_code} for item ${item_id}`);
+        break;
+      case 'IDENTITY_VERIFICATION':
+        console.log(`Identity verification webhook: ${webhook_code}`);
+        // Handle identity verification status updates
+        break;
+      default:
+        console.log(`Unhandled webhook type: ${webhook_type}`);
+    }
+    
+    res.json({ received: true });
   } catch (error) {
-    console.error('Error getting account balance:', error);
-    res.status(500).json({ error: 'Failed to get account balance' });
+    console.error('Error handling Plaid webhook:', error);
+    res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
 
