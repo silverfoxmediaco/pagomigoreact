@@ -44,9 +44,7 @@ const authenticateToken = (req, res, next) => {
 
 // ============ IDENTITY VERIFICATION ENDPOINTS ============
 
-// Create identity verification link token
-// Replace the identity verification create endpoint in your plaidRoutes.js with this:
-
+// Create identity verification link token - FIXED VERSION
 router.post('/identity-verification/create', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -59,35 +57,116 @@ router.post('/identity-verification/create', authenticateToken, async (req, res)
       return res.status(500).json({ error: 'Identity verification template not configured' });
     }
     
-    // Get user info for better personalization
+    // Get user info
     const User = getUserModel();
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    let idvId = user.plaidIdentityVerificationId;
     
-    // Create identity verification session
-    const idvRequest = {
-      is_shareable: true,
-      template_id: process.env.PLAID_IDV_TEMPLATE_ID,
-      gave_consent: true,
-      user: {
-        client_user_id: userId.toString(),
-        legal_name: user.name,
-        email_address: user.email,
-        phone_number: user.phone || undefined
+    // Check if user already has an identity verification session
+    if (idvId) {
+      console.log('Existing IDV session found:', idvId);
+      
+      try {
+        // Check the status of existing session
+        const existingIdvResponse = await plaidClient.identityVerificationGet({
+          identity_verification_id: idvId
+        });
+        
+        const status = existingIdvResponse.data.status;
+        console.log('Existing IDV session status:', status);
+        
+        // If it's still active (not completed/failed), reuse it
+        if (status === 'active' || status === 'pending_review') {
+          console.log('Reusing existing active IDV session');
+          
+          // Create new link token for existing session
+          const linkTokenRequest = {
+            products: ['identity_verification'],
+            client_name: 'Pagomigo',
+            country_codes: process.env.PLAID_COUNTRY_CODES.split(','),
+            language: 'en',
+            user: {
+              client_user_id: userId.toString(),
+              legal_name: user.name,
+              email_address: user.email,
+              phone_number: user.phone || undefined
+            },
+            identity_verification_id: idvId
+          };
+
+          const linkTokenResponse = await plaidClient.linkTokenCreate(linkTokenRequest);
+          
+          return res.json({ 
+            success: true,
+            link_token: linkTokenResponse.data.link_token,
+            identity_verification_id: idvId,
+            expiration: linkTokenResponse.data.expiration,
+            existing_session: true
+          });
+        }
+      } catch (getError) {
+        console.log('Error fetching existing session, will create new one:', getError.message);
+        // If we can't get the existing session, create a new one
+        idvId = null;
       }
-    };
+    }
 
-    console.log('Creating IDV session with request:', JSON.stringify(idvRequest, null, 2));
-    const idvResponse = await plaidClient.identityVerificationCreate(idvRequest);
-    console.log('IDV session created:', idvResponse.data.id);
+    // Create new identity verification session if none exists or previous failed
+    if (!idvId) {
+      console.log('Creating new IDV session');
+      
+      const idvRequest = {
+        is_shareable: true,
+        template_id: process.env.PLAID_IDV_TEMPLATE_ID,
+        gave_consent: true,
+        user: {
+          client_user_id: userId.toString(),
+          legal_name: user.name,
+          email_address: user.email,
+          phone_number: user.phone || undefined
+        }
+      };
 
-    // Save the identity verification ID to database
-    await User.findByIdAndUpdate(userId, { 
-      plaidIdentityVerificationId: idvResponse.data.id,
-      plaidIdentityStatus: 'pending'
-    });
+      console.log('Creating IDV session with request:', JSON.stringify(idvRequest, null, 2));
+      
+      try {
+        const idvResponse = await plaidClient.identityVerificationCreate(idvRequest);
+        idvId = idvResponse.data.id;
+        console.log('New IDV session created:', idvId);
+
+        // Save the identity verification ID to database
+        await User.findByIdAndUpdate(userId, { 
+          plaidIdentityVerificationId: idvId,
+          plaidIdentityStatus: 'pending'
+        });
+      } catch (createError) {
+        // If creation fails due to existing session, try with idempotent
+        if (createError.response?.data?.error_code === 'INVALID_FIELD' && 
+            createError.response?.data?.error_message?.includes('already exists')) {
+          
+          console.log('Session exists, creating with idempotent=true');
+          
+          // Try with idempotent parameter - this handles the "already exists" error
+          const idempotentResponse = await plaidClient.identityVerificationCreate(idvRequest, {
+            params: { idempotent: true }
+          });
+          
+          idvId = idempotentResponse.data.id;
+          console.log('IDV session retrieved/created with idempotent:', idvId);
+          
+          await User.findByIdAndUpdate(userId, { 
+            plaidIdentityVerificationId: idvId,
+            plaidIdentityStatus: 'pending'
+          });
+        } else {
+          throw createError; // Re-throw other errors
+        }
+      }
+    }
 
     // Create link token for identity verification
     const linkTokenRequest = {
@@ -101,18 +180,17 @@ router.post('/identity-verification/create', authenticateToken, async (req, res)
         email_address: user.email,
         phone_number: user.phone || undefined
       },
-      // Use the identity_verification_id in the top level, not nested
-      identity_verification_id: idvResponse.data.id
+      identity_verification_id: idvId
     };
 
-    console.log('Creating link token with request:', JSON.stringify(linkTokenRequest, null, 2));
+    console.log('Creating link token for IDV session:', idvId);
     const linkTokenResponse = await plaidClient.linkTokenCreate(linkTokenRequest);
     console.log('Link token created successfully');
 
     res.json({ 
       success: true,
       link_token: linkTokenResponse.data.link_token,
-      identity_verification_id: idvResponse.data.id,
+      identity_verification_id: idvId,
       expiration: linkTokenResponse.data.expiration
     });
 
