@@ -45,45 +45,77 @@ const authenticateToken = (req, res, next) => {
 // ============ IDENTITY VERIFICATION ENDPOINTS ============
 
 // Create identity verification link token
+// Replace the identity verification create endpoint in your plaidRoutes.js with this:
+
 router.post('/identity-verification/create', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     console.log('Creating IDV link token for user:', userId);
+    console.log('Using template ID:', process.env.PLAID_IDV_TEMPLATE_ID);
     
-    // Create the identity verification session first
-    const idvResponse = await plaidClient.identityVerificationCreate({
+    // Validate that template ID exists
+    if (!process.env.PLAID_IDV_TEMPLATE_ID) {
+      console.error('PLAID_IDV_TEMPLATE_ID not found in environment variables');
+      return res.status(500).json({ error: 'Identity verification template not configured' });
+    }
+    
+    // Get user info for better personalization
+    const User = getUserModel();
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Create identity verification session
+    const idvRequest = {
       is_shareable: true,
       template_id: process.env.PLAID_IDV_TEMPLATE_ID,
+      gave_consent: true,
       user: {
         client_user_id: userId.toString(),
+        legal_name: user.name,
+        email_address: user.email,
+        phone_number: user.phone || undefined
       }
-    });
+    };
 
+    console.log('Creating IDV session with request:', JSON.stringify(idvRequest, null, 2));
+    const idvResponse = await plaidClient.identityVerificationCreate(idvRequest);
     console.log('IDV session created:', idvResponse.data.id);
 
-    // Then create link token for the identity verification
-    const linkTokenResponse = await plaidClient.linkTokenCreate({
-      products: ['identity_verification'],
-      client_name: 'Pagomigo',
-      country_codes: process.env.PLAID_COUNTRY_CODES.split(','),
-      language: 'en',
-      identity_verification: {
-        identity_verification_id: idvResponse.data.id
-      },
-      user: {
-        client_user_id: userId.toString()
-      }
-    });
-
-    // Save the identity verification ID to your database
-    const User = getUserModel();
+    // Save the identity verification ID to database
     await User.findByIdAndUpdate(userId, { 
       plaidIdentityVerificationId: idvResponse.data.id,
       plaidIdentityStatus: 'pending'
     });
 
-    console.log('IDV Link token created successfully');
-    res.json({ link_token: linkTokenResponse.data.link_token });
+    // Create link token for identity verification
+    const linkTokenRequest = {
+      products: ['identity_verification'],
+      client_name: 'Pagomigo',
+      country_codes: process.env.PLAID_COUNTRY_CODES.split(','),
+      language: 'en',
+      user: {
+        client_user_id: userId.toString(),
+        legal_name: user.name,
+        email_address: user.email,
+        phone_number: user.phone || undefined
+      },
+      // Use the identity_verification_id in the top level, not nested
+      identity_verification_id: idvResponse.data.id
+    };
+
+    console.log('Creating link token with request:', JSON.stringify(linkTokenRequest, null, 2));
+    const linkTokenResponse = await plaidClient.linkTokenCreate(linkTokenRequest);
+    console.log('Link token created successfully');
+
+    res.json({ 
+      success: true,
+      link_token: linkTokenResponse.data.link_token,
+      identity_verification_id: idvResponse.data.id,
+      expiration: linkTokenResponse.data.expiration
+    });
+
   } catch (error) {
     console.error('Error creating identity verification:', error);
     
