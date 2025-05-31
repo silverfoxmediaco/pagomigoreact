@@ -1,4 +1,4 @@
-// src/pages/BillPayTest.jsx
+// src/pages/BillPay.jsx
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import Navigation from '../components/Navigation';
@@ -36,7 +36,7 @@ import {
   Payment as PaymentIcon
 } from '@mui/icons-material';
 
-const BillPayTest = () => {
+const BillPay = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -189,7 +189,7 @@ const BillPayTest = () => {
             gutterBottom
             sx={{ 
               fontWeight: 'bold',
-              color: '#1976d2',
+              color: '#03c',
               mb: 2
             }}
           >
@@ -225,7 +225,7 @@ const BillPayTest = () => {
             elevation={2}
             sx={{ mb: 4, p: 3 }}
           >
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ mb: 3, textAlign: 'center' }}>
               <Typography 
                 variant="h4" 
                 component="h2" 
@@ -247,7 +247,7 @@ const BillPayTest = () => {
 
             <Grid container spacing={3}>
               {category.items.map((item, itemIndex) => (
-                <Grid item xs={6} sm={6} md={4} key={itemIndex} sx={{ display: 'flex' }}>
+                <Grid key={itemIndex} size={{ xs: 12, sm: 6, md: 4 }} sx={{ display: 'flex' }}>
                   <Card 
                     elevation={3}
                     sx={{ 
@@ -354,19 +354,19 @@ const BillPayTest = () => {
             Payment Statistics
           </Typography>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="h4" color="success.main" fontWeight="bold">
                 99.9%
               </Typography>
               <Typography color="text.secondary">Success Rate</Typography>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="h4" color="primary.main" fontWeight="bold">
                 &lt;2s
               </Typography>
               <Typography color="text.secondary">Average Processing</Typography>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="h4" color="info.main" fontWeight="bold">
                 24/7
               </Typography>
@@ -381,4 +381,4 @@ const BillPayTest = () => {
   );
 };
 
-export default BillPayTest;
+export default BillPay;
