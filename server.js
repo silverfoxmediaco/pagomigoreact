@@ -424,7 +424,7 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-// USER PROFILE ENDPOINT (FIXED ADDRESS MAPPING)
+// USER PROFILE ENDPOINT (FIXED ADDRESS BUG)
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
@@ -436,6 +436,31 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
       });
     }
     
+    // Helper function to safely get address as string
+    const getAddressString = (user) => {
+      // Try direct address field first
+      if (user.address && typeof user.address === 'string') {
+        return user.address;
+      }
+      
+      // Try profile.address if it's a string
+      if (user.profile?.address && typeof user.profile.address === 'string') {
+        return user.profile.address;
+      }
+      
+      // Try building address from profile.address object
+      if (user.profile?.address && typeof user.profile.address === 'object') {
+        const addr = user.profile.address;
+        const parts = [addr.street, addr.city, addr.state].filter(Boolean);
+        if (parts.length > 0) {
+          return parts.join(', ');
+        }
+      }
+      
+      // Default fallback
+      return 'Not provided';
+    };
+    
     // Format the response to match what your frontend expects
     const profileData = {
       name: user.name,
@@ -443,13 +468,7 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
       phone: user.phone,
       phone_verified: user.phoneVerified,
       email: user.email,
-      // Try multiple possible address locations
-      address: user.address || 
-               user.profile?.address?.street || 
-               user.profile?.address || 
-               (user.profile?.address?.street ? 
-                 `${user.profile.address.street}, ${user.profile.address.city}, ${user.profile.address.state}` : 
-                 'Not provided'),
+      address: getAddressString(user), // FIXED: Always returns a string
       kyc_status: user.personaVerified ? 'completed' : 'pending',
       balance: user.balance || 0,
       createdAt: user.createdAt
@@ -534,9 +553,9 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
       updateData.phone = phone.trim();
     }
     
-    // Handle address update
+    // Handle address update - ensure it's always a string
     if (address !== undefined) {
-      updateData.address = address.trim();
+      updateData.address = typeof address === 'string' ? address.trim() : '';
     }
     
     // Handle profile object update
