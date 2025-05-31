@@ -247,7 +247,7 @@ const BillPayTest = () => {
 
             <Grid container spacing={3}>
               {category.items.map((item, itemIndex) => (
-                <Grid item xs={12} sm={6} md={4} key={itemIndex} sx={{ display: 'flex' }}>
+                <Grid item xs={6} sm={6} md={4} key={itemIndex} sx={{ display: 'flex' }}>
                   <Card 
                     elevation={3}
                     sx={{ 
