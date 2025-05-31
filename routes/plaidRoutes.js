@@ -53,8 +53,7 @@ router.post('/identity-verification/create', authenticateToken, async (req, res)
     // Create the identity verification session first
     const idvResponse = await plaidClient.identityVerificationCreate({
       is_shareable: true,
-      template_id: 'idvtmp_4FrXJvfQU3zGUR', // Plaid's default template
-      gave_consent: true,
+      template_id: process.env.PLAID_IDV_TEMPLATE_ID,
       user: {
         client_user_id: userId.toString(),
       }
