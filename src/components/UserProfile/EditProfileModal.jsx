@@ -149,8 +149,8 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
         
         setTimeout(() => {
           onClose();
-          // Trigger a page reload to refresh the dashboard data
-          window.location.reload();
+          // Force dashboard to refetch user data by dispatching a custom event
+          window.dispatchEvent(new CustomEvent('profile-updated'));
         }, 1500);
       } else {
         setError(result.error || 'Failed to update profile');

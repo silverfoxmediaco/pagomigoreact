@@ -20,7 +20,7 @@ const Dashboard = () => {
   const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   
   // Your existing hooks
-  const { userData, loading, error } = useUserProfile();
+  const { userData, loading, error, fetchProfile } = useUserProfile();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSendMoneyModalOpen, setIsSendMoneyModalOpen] = useState(false);
   const [isRequestMoneyModalOpen, setIsRequestMoneyModalOpen] = useState(false);
@@ -82,6 +82,26 @@ const Dashboard = () => {
 
     fetchUnitToken();
   }, [isAuthenticated, getAccessTokenSilently]);
+
+  // Add profile refresh listener
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      console.log('Profile updated event received, refreshing user data...');
+      // If fetchProfile is available from useUserProfile, use it
+      if (fetchProfile) {
+        fetchProfile();
+      } else {
+        // Fallback to page reload
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('profile-updated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdate);
+    };
+  }, [fetchProfile]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
