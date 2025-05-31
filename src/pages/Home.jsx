@@ -18,7 +18,7 @@ import sneakers from '../assets/newsneakers.png';
 import gameconsole from '../assets/newgameconsole.png';
 import tires from '../assets/newtires.png';
 import watch from '../assets/newwatch.png';
-import visaRoot from '../assets/pagomigodisplayimage.png';
+import visaRoot from '../assets/visawithnewpgmlogo.png';
 import bonitaSenorita from '../assets/bonitasenoritaphone.png';
 import sendMoney from '../assets/sendmoneyiphone.png';
 import requestMoney from '../assets/requestmoneyiphoneportrait.png';
