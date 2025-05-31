@@ -6,7 +6,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import '../styles/Navigation.css';
 
 // Import your images - Update paths as needed
-import pagomigoLogo from '../assets/pagomigologo.png';
+import pagomigoLogo from '../assets/newpgmlogov4500x200trans.png';
 import menuIcon from '../assets/menuicon.svg';
 import closeIcon from '../assets/closeicon.svg';
 

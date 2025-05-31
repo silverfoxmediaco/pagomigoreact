@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import '../styles/Footer.css';
 
 // Import your logo
-import pagomigoLogo from '../assets/pagomigologo.png';
+import pagomigoLogo from '../assets/newpgmlogov4500x200trans.png';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
