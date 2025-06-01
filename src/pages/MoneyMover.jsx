@@ -9,7 +9,8 @@ const MoneyMover = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('send');
   const [userBalance, setUserBalance] = useState('$500.00');
-  const [kycStatus, setKycStatus] = useState('pending');
+  // const [kycStatus, setKycStatus] = useState('pending');
+  const [kycStatus, setKycStatus] = useState('approved'); // Force approved for testing
   const [userRegion, setUserRegion] = useState('north_america');
   const [hasUnitAccount, setHasUnitAccount] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,7 @@ const MoneyMover = () => {
 
   useEffect(() => {
     if (user) {
-      checkKycStatus();
+      // checkKycStatus(); // COMMENTED OUT - Skip KYC check
       checkUnitAccount();
       fetchUserBalance();
     }
@@ -77,7 +78,8 @@ const MoneyMover = () => {
     return 'north_america'; // Default
   };
 
-  // Check KYC status
+  // COMMENTED OUT - Check KYC status
+  /*
   const checkKycStatus = async () => {
     try {
       const response = await fetch('/api/user/profile', {
@@ -108,6 +110,7 @@ const MoneyMover = () => {
       console.error('Error checking KYC status:', error);
     }
   };
+  */
 
   // Check Unit account status
   const checkUnitAccount = async () => {
@@ -134,7 +137,7 @@ const MoneyMover = () => {
       setUserBalance('$500.00');
       
       // You can uncomment and modify this when ready for real API integration
-      
+      /*
       const response = await fetch('/api/unit/accounts/balance', {
         headers: { 'Authorization': `Bearer ${user.token}` }
       });
@@ -143,6 +146,7 @@ const MoneyMover = () => {
         const data = await response.json();
         setUserBalance(`$${(data.balance / 100).toFixed(2)}`);
       }
+      */
       
     } catch (error) {
       console.error('Error fetching balance:', error);
@@ -154,10 +158,13 @@ const MoneyMover = () => {
   const handleSendMoney = async (e) => {
     e.preventDefault();
     
+    // COMMENTED OUT - KYC verification check
+    /*
     if (kycStatus !== 'approved') {
       alert('Identity verification required before sending money.');
       return;
     }
+    */
 
     setLoading(true);
     setError('');
@@ -196,10 +203,13 @@ const MoneyMover = () => {
   const handleRequestMoney = async (e) => {
     e.preventDefault();
     
+    // COMMENTED OUT - KYC verification check
+    /*
     if (kycStatus !== 'approved') {
       alert('Identity verification required before requesting money.');
       return;
     }
+    */
 
     setLoading(true);
     setError('');
@@ -237,10 +247,13 @@ const MoneyMover = () => {
   const handleUnitSendMoney = async (e) => {
     e.preventDefault();
     
+    // COMMENTED OUT - KYC verification check
+    /*
     if (kycStatus !== 'approved') {
       alert('Identity verification required before sending money.');
       return;
     }
+    */
 
     if (!unitSendForm.receiver || !unitSendForm.amount) {
       setError('Please fill in all required fields.');
@@ -311,7 +324,8 @@ const MoneyMover = () => {
     }
   };
 
-  // Updated redirectToKyc function
+  // COMMENTED OUT - KYC redirect function
+  /*
   const redirectToKyc = () => {
     if (userRegion === 'north_america') {
       alert('We need to verify your identity using Plaid. You\'ll be redirected to complete identity verification.');
@@ -323,6 +337,7 @@ const MoneyMover = () => {
       window.location.href = '/persona-kyc';
     }
   };
+  */
 
   const isKycApproved = kycStatus === 'approved';
 
@@ -331,7 +346,8 @@ const MoneyMover = () => {
       <Navigation />
       
       <main className="money-mover">
-        {/* KYC Warning Banner */}
+        {/* COMMENTED OUT - KYC Warning Banner */}
+        {/*
         {!isKycApproved && (
           <div className="kyc-warning-banner">
             <p>
@@ -346,6 +362,7 @@ const MoneyMover = () => {
             </button>
           </div>
         )}
+        */}
 
         {/* Balance Section */}
         <section className="balance-section">
@@ -395,7 +412,7 @@ const MoneyMover = () => {
                 value={sendForm.recipientName}
                 onChange={(e) => setSendForm({...sendForm, recipientName: e.target.value})}
                 required
-                disabled={!isKycApproved}
+                // disabled={!isKycApproved} // COMMENTED OUT - Remove verification requirement
               />
               <input
                 type="text"
@@ -403,7 +420,7 @@ const MoneyMover = () => {
                 value={sendForm.recipientCountry}
                 onChange={(e) => setSendForm({...sendForm, recipientCountry: e.target.value})}
                 required
-                disabled={!isKycApproved}
+                // disabled={!isKycApproved} // COMMENTED OUT - Remove verification requirement
               />
               <input
                 type="number"
@@ -411,12 +428,13 @@ const MoneyMover = () => {
                 value={sendForm.amountUsd}
                 onChange={(e) => setSendForm({...sendForm, amountUsd: e.target.value})}
                 required
-                disabled={!isKycApproved}
+                // disabled={!isKycApproved} // COMMENTED OUT - Remove verification requirement
               />
               <button 
                 type="submit" 
-                disabled={loading || !isKycApproved}
-                onClick={!isKycApproved ? redirectToKyc : undefined}
+                disabled={loading}
+                // disabled={loading || !isKycApproved} // COMMENTED OUT - Remove verification requirement
+                // onClick={!isKycApproved ? redirectToKyc : undefined} // COMMENTED OUT - Remove verification redirect
               >
                 {loading ? 'Sending...' : 'Send'}
               </button>
@@ -435,7 +453,7 @@ const MoneyMover = () => {
                 value={requestForm.requestedFrom}
                 onChange={(e) => setRequestForm({...requestForm, requestedFrom: e.target.value})}
                 required
-                disabled={!isKycApproved}
+                // disabled={!isKycApproved} // COMMENTED OUT - Remove verification requirement
               />
               <input
                 type="text"
@@ -443,7 +461,7 @@ const MoneyMover = () => {
                 value={requestForm.requestNote}
                 onChange={(e) => setRequestForm({...requestForm, requestNote: e.target.value})}
                 required
-                disabled={!isKycApproved}
+                // disabled={!isKycApproved} // COMMENTED OUT - Remove verification requirement
               />
               <input
                 type="number"
@@ -451,12 +469,13 @@ const MoneyMover = () => {
                 value={requestForm.amountUsd}
                 onChange={(e) => setRequestForm({...requestForm, amountUsd: e.target.value})}
                 required
-                disabled={!isKycApproved}
+                // disabled={!isKycApproved} // COMMENTED OUT - Remove verification requirement
               />
               <button 
                 type="submit" 
-                disabled={loading || !isKycApproved}
-                onClick={!isKycApproved ? redirectToKyc : undefined}
+                disabled={loading}
+                // disabled={loading || !isKycApproved} // COMMENTED OUT - Remove verification requirement
+                // onClick={!isKycApproved ? redirectToKyc : undefined} // COMMENTED OUT - Remove verification redirect
               >
                 {loading ? 'Requesting...' : 'Request'}
               </button>
@@ -495,7 +514,7 @@ const MoneyMover = () => {
                       value={unitSendForm.receiver}
                       onChange={(e) => setUnitSendForm({...unitSendForm, receiver: e.target.value})}
                       required
-                      disabled={!isKycApproved}
+                      // disabled={!isKycApproved} // COMMENTED OUT - Remove verification requirement
                     />
                   </div>
                   <div className="form-group">
@@ -511,7 +530,7 @@ const MoneyMover = () => {
                         value={unitSendForm.amount}
                         onChange={(e) => setUnitSendForm({...unitSendForm, amount: e.target.value})}
                         required
-                        disabled={!isKycApproved}
+                        // disabled={!isKycApproved} // COMMENTED OUT - Remove verification requirement
                       />
                     </div>
                   </div>
@@ -523,13 +542,14 @@ const MoneyMover = () => {
                       placeholder="What's it for?"
                       value={unitSendForm.note}
                       onChange={(e) => setUnitSendForm({...unitSendForm, note: e.target.value})}
-                      disabled={!isKycApproved}
+                      // disabled={!isKycApproved} // COMMENTED OUT - Remove verification requirement
                     />
                   </div>
                   <button 
                     type="submit" 
-                    disabled={loading || !isKycApproved}
-                    onClick={!isKycApproved ? redirectToKyc : undefined}
+                    disabled={loading}
+                    // disabled={loading || !isKycApproved} // COMMENTED OUT - Remove verification requirement
+                    // onClick={!isKycApproved ? redirectToKyc : undefined} // COMMENTED OUT - Remove verification redirect
                   >
                     {loading ? 'Sending...' : 'Send via Unit'}
                   </button>
