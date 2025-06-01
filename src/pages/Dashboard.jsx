@@ -87,8 +87,18 @@ const QuickPlaidDebug = () => {
   const runAllTests = async () => {
     console.log('=== Starting Plaid Debug Tests ===');
     
-    // Test 1: Check if API is alive
-    await runTest('API Ping', '/../../ping', 'GET');
+    // Test 1: Check if API is alive (fix path)
+    await runTest('API Ping', '', 'GET'); // This will test /api/plaid which should fail, then we'll test /api/ping
+    
+    // Test 1b: Test actual ping endpoint
+    const token = localStorage.getItem('token');
+    const baseURL = process.env.REACT_APP_API_BASE || '';
+    try {
+      const pingResult = await fetch(`${baseURL}/api/ping`);
+      console.log('Direct ping test:', pingResult.ok ? 'SUCCESS' : 'FAILED');
+    } catch (e) {
+      console.log('Direct ping failed:', e.message);
+    }
     
     // Test 2: Check Plaid config (if endpoint exists)
     await runTest('Plaid Config', '/debug/config', 'GET');
@@ -235,12 +245,12 @@ const QuickPlaidDebug = () => {
         marginTop: '15px',
         fontSize: '12px'
       }}>
-        <strong>What to check:</strong><br/>
+        <strong>Current Status Analysis:</strong><br/>
         1. Open browser console (F12) to see detailed logs<br/>
-        2. Look for specific error messages in the response data<br/>
-        3. Check if PLAID_IDV_TEMPLATE_ID is set in your backend<br/>
-        4. Verify your Plaid sandbox credentials are correct<br/>
-        5. Make sure you created an IDV template in Plaid Dashboard
+        2. Bank Link Token: Still seeing identity_verification error - restart server completely<br/>
+        3. IDV Link Token: Session already exists - this is normal, Plaid reuses existing sessions<br/>
+        4. If you see "already exists" - your IDV is actually working correctly<br/>
+        5. Try testing Plaid Link in your actual PlaidVerification component now
       </div>
     </div>
   );
