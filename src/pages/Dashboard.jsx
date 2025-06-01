@@ -13,6 +13,239 @@ import BankingSection from '../UnitBanking/BankingSection';
 import ProfileQRCode from '../ProfileQRCode';
 import styles from '../styles/Dashboard.module.css';
 
+// Quick Plaid Debug Component - Inline for testing
+const QuickPlaidDebug = () => {
+  const [results, setResults] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  const testEndpoint = async (endpoint, method = 'GET', body = null) => {
+    const token = localStorage.getItem('token');
+    const baseURL = process.env.REACT_APP_API_BASE || '';
+    const url = `${baseURL}/api/plaid${endpoint}`;
+    
+    console.log(`Testing: ${method} ${url}`);
+    console.log(`Token: ${token ? token.substring(0, 20) + '...' : 'NO TOKEN'}`);
+    
+    try {
+      const options = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+
+      if (body) {
+        options.body = JSON.stringify(body);
+      }
+
+      const response = await fetch(url, options);
+      
+      console.log(`Response status: ${response.status}`);
+      console.log(`Response ok: ${response.ok}`);
+      
+      let responseData;
+      try {
+        responseData = await response.json();
+        console.log('Response data:', responseData);
+      } catch (parseError) {
+        const textData = await response.text();
+        console.log('Response text:', textData);
+        responseData = { error: `Could not parse JSON: ${textData}` };
+      }
+
+      return {
+        status: response.status,
+        ok: response.ok,
+        data: responseData
+      };
+    } catch (error) {
+      console.error('Network error:', error);
+      return {
+        status: 'Network Error',
+        ok: false,
+        data: { error: error.message }
+      };
+    }
+  };
+
+  const runTest = async (testName, endpoint, method = 'GET', body = null) => {
+    setLoading(true);
+    console.log(`\n=== RUNNING TEST: ${testName} ===`);
+    
+    const result = await testEndpoint(endpoint, method, body);
+    
+    setResults(prev => ({
+      ...prev,
+      [testName]: result
+    }));
+    
+    setLoading(false);
+    return result;
+  };
+
+  const runAllTests = async () => {
+    console.log('=== Starting Plaid Debug Tests ===');
+    
+    // Test 1: Check if API is alive
+    await runTest('API Ping', '/../../ping', 'GET');
+    
+    // Test 2: Check Plaid config (if endpoint exists)
+    await runTest('Plaid Config', '/debug/config', 'GET');
+    
+    // Test 3: Try bank link token (simpler)
+    await runTest('Bank Link Token', '/link-token', 'POST');
+    
+    // Test 4: Try IDV link token (the failing one)
+    await runTest('IDV Link Token', '/identity-verification/create', 'POST');
+    
+    // Test 5: Check IDV status
+    await runTest('IDV Status', '/identity-verification/status', 'GET');
+    
+    console.log('=== All tests completed ===');
+  };
+
+  const checkAuth = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return { valid: false, message: 'No token found' };
+    }
+    
+    try {
+      // Basic JWT structure check
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return { valid: false, message: 'Invalid JWT format' };
+      }
+      
+      // Decode payload (don't verify signature in frontend)
+      const payload = JSON.parse(atob(parts[1]));
+      const now = Date.now() / 1000;
+      
+      if (payload.exp && payload.exp < now) {
+        return { valid: false, message: 'Token expired' };
+      }
+      
+      return { 
+        valid: true, 
+        message: 'Token appears valid',
+        userId: payload.userId,
+        exp: payload.exp ? new Date(payload.exp * 1000).toLocaleString() : 'No expiration'
+      };
+    } catch (error) {
+      return { valid: false, message: `Token decode error: ${error.message}` };
+    }
+  };
+
+  const authStatus = checkAuth();
+
+  return (
+    <div style={{ 
+      padding: '20px', 
+      backgroundColor: '#f5f5f5', 
+      borderRadius: '8px',
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      marginBottom: '20px'
+    }}>
+      <h3>Plaid Debug Tool</h3>
+      
+      {/* Auth Status */}
+      <div style={{
+        padding: '10px',
+        backgroundColor: authStatus.valid ? '#e8f5e9' : '#ffebee',
+        borderRadius: '5px',
+        marginBottom: '15px'
+      }}>
+        <strong>Auth Status:</strong> {authStatus.valid ? 'VALID' : 'INVALID'} - {authStatus.message}
+        {authStatus.valid && (
+          <div style={{ fontSize: '12px', marginTop: '5px' }}>
+            User ID: {authStatus.userId}<br/>
+            Expires: {authStatus.exp}
+          </div>
+        )}
+      </div>
+
+      {/* Test Button */}
+      <button 
+        onClick={runAllTests}
+        disabled={loading || !authStatus.valid}
+        style={{
+          padding: '10px 20px',
+          backgroundColor: loading ? '#ccc' : '#0033cc',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          marginBottom: '20px'
+        }}
+      >
+        {loading ? 'Running Tests...' : 'Run Debug Tests'}
+      </button>
+
+      {/* Results */}
+      <div>
+        {Object.entries(results).map(([testName, result]) => (
+          <div key={testName} style={{
+            marginBottom: '15px',
+            padding: '10px',
+            backgroundColor: result.ok ? '#e8f5e9' : '#ffebee',
+            borderRadius: '5px'
+          }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+              {result.ok ? 'SUCCESS' : 'FAILED'} - {testName} - Status: {result.status}
+            </div>
+            
+            <details>
+              <summary style={{ cursor: 'pointer', fontSize: '12px' }}>
+                Click to see details
+              </summary>
+              <pre style={{
+                backgroundColor: '#f0f0f0',
+                padding: '10px',
+                borderRadius: '3px',
+                overflow: 'auto',
+                fontSize: '11px',
+                marginTop: '5px'
+              }}>
+                {JSON.stringify(result.data, null, 2)}
+              </pre>
+            </details>
+          </div>
+        ))}
+      </div>
+
+      {/* Instructions */}
+      {!authStatus.valid && (
+        <div style={{
+          padding: '15px',
+          backgroundColor: '#fff3cd',
+          borderRadius: '5px',
+          marginTop: '15px'
+        }}>
+          <strong>Warning: Please login first</strong><br/>
+          You need to be authenticated to test Plaid endpoints.
+        </div>
+      )}
+
+      <div style={{
+        padding: '15px',
+        backgroundColor: '#e3f2fd',
+        borderRadius: '5px',
+        marginTop: '15px',
+        fontSize: '12px'
+      }}>
+        <strong>What to check:</strong><br/>
+        1. Open browser console (F12) to see detailed logs<br/>
+        2. Look for specific error messages in the response data<br/>
+        3. Check if PLAID_IDV_TEMPLATE_ID is set in your backend<br/>
+        4. Verify your Plaid sandbox credentials are correct<br/>
+        5. Make sure you created an IDV template in Plaid Dashboard
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const { t } = useLanguage();
   
@@ -178,6 +411,14 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
+            {/* DEBUG SECTION - Remove this after fixing Plaid */}
+            <section className={styles.dashboardSection}>
+              <div className={styles.sectionHeader}>
+                <h2>Plaid Debug Tool (Remove after fixing)</h2>
+              </div>
+              <QuickPlaidDebug />
+            </section>
+
             {/* User Profile Section */}
             <section className={styles.dashboardSection}>
               <div className={styles.sectionHeader}>
