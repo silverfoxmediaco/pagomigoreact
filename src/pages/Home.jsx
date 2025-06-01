@@ -20,9 +20,9 @@ import tires from '../assets/newtires.png';
 import watch from '../assets/newwatch.png';
 import visaRoot from '../assets/visawithnewpgmlogo.png';
 import bonitaSenorita from '../assets/bonitasenoritaphone.png';
-import sendMoney from '../assets/sendmoneyiphone.png';
-import requestMoney from '../assets/requestmoneyiphoneportrait.png';
-import billPay from '../assets/billpayportait.png';
+import sendMoney from '../assets/send-portrait.png';
+import requestMoney from '../assets/request-portrait.png';
+import billPay from '../assets/billpayiphone.png';
 
 const Home = () => {
   const { t } = useLanguage();
