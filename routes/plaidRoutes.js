@@ -99,8 +99,10 @@ router.post('/identity-verification/create', authenticateToken, async (req, res)
               legal_name: user.name,
               email_address: user.email,
               phone_number: user.phone || undefined
+            },
+            identity_verification: {
+              template_id: process.env.PLAID_IDV_TEMPLATE_ID
             }
-            // NOTE: Do NOT include identity_verification_id when using products: ['identity_verification']
           };
 
           const linkTokenResponse = await plaidClient.linkTokenCreate(linkTokenRequest);
@@ -246,9 +248,10 @@ router.post('/identity-verification/create', authenticateToken, async (req, res)
         legal_name: user.name,
         email_address: user.email,
         phone_number: user.phone || undefined
+      },
+      identity_verification: {
+        template_id: process.env.PLAID_IDV_TEMPLATE_ID
       }
-      // NOTE: Do NOT include identity_verification_id here when products includes 'identity_verification'
-      // The identity_verification_id is used internally by Plaid to link the session
     };
 
     console.log('Creating link token for IDV session:', idvId);
