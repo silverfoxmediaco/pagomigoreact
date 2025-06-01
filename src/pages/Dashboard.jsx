@@ -421,14 +421,6 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
-            {/* DEBUG SECTION - Remove this after fixing Plaid */}
-            <section className={styles.dashboardSection}>
-              <div className={styles.sectionHeader}>
-                <h2>Plaid Debug Tool (Remove after fixing)</h2>
-              </div>
-              <QuickPlaidDebug />
-            </section>
-
             {/* User Profile Section */}
             <section className={styles.dashboardSection}>
               <div className={styles.sectionHeader}>
