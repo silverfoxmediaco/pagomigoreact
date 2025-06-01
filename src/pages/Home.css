@@ -171,6 +171,7 @@ main {
   color: #0033cc;
   margin-bottom: 1.5rem;
   text-align: center;
+  
 }
 
 .retailsectiongrid {
@@ -752,6 +753,12 @@ html {
   .retailsection {
     display: grid;
     grid-template-columns: 1fr;
+    margin: 20px auto;
+  }
+
+  .retailsectionh2 {
+    font-size: 30px;
+    text-align: center;
   }
   
   h1, h2, h3, p {
