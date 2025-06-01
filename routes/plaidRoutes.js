@@ -5,6 +5,11 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const { PlaidApi, Configuration, PlaidEnvironments } = require('plaid');
 
+// Add fetch for Node.js if not available globally
+if (typeof fetch === 'undefined') {
+  global.fetch = require('node-fetch');
+}
+
 // Configure Plaid client
 const configuration = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
@@ -144,24 +149,86 @@ router.post('/identity-verification/create', authenticateToken, async (req, res)
           plaidIdentityStatus: 'pending'
         });
       } catch (createError) {
-        // If creation fails due to existing session, try with idempotent
+        // If creation fails due to existing session, look up the existing one
         if (createError.response?.data?.error_code === 'INVALID_FIELD' && 
             createError.response?.data?.error_message?.includes('already exists')) {
           
-          console.log('Session exists, creating with idempotent=true');
+          console.log('Session already exists - looking up existing session');
           
-          // Try with idempotent parameter - this handles the "already exists" error
-          const idempotentResponse = await plaidClient.identityVerificationCreate(idvRequest, {
-            params: { idempotent: true }
-          });
-          
-          idvId = idempotentResponse.data.id;
-          console.log('IDV session retrieved/created with idempotent:', idvId);
-          
-          await User.findByIdAndUpdate(userId, { 
-            plaidIdentityVerificationId: idvId,
-            plaidIdentityStatus: 'pending'
-          });
+          try {
+            // List existing identity verification sessions for this user
+            const listResponse = await plaidClient.identityVerificationList({
+              template_id: process.env.PLAID_IDV_TEMPLATE_ID,
+              client_user_id: userId.toString()
+            });
+            
+            // Find the most recent session
+            const existingSessions = listResponse.data.identity_verifications;
+            if (existingSessions && existingSessions.length > 0) {
+              // Get the most recent session
+              const mostRecent = existingSessions.sort((a, b) => 
+                new Date(b.created_at) - new Date(a.created_at)
+              )[0];
+              
+              idvId = mostRecent.id;
+              console.log(`Using existing IDV session: ${idvId}, status: ${mostRecent.status}`);
+              
+              // Update database with existing session ID and current status
+              let appStatus = 'pending';
+              if (mostRecent.status === 'success') {
+                appStatus = 'approved';
+              } else if (mostRecent.status === 'failed') {
+                appStatus = 'failed';
+              } else if (mostRecent.status === 'pending_review') {
+                appStatus = 'pending_review';
+              }
+              
+              await User.findByIdAndUpdate(userId, { 
+                plaidIdentityVerificationId: idvId,
+                plaidIdentityStatus: appStatus,
+                personaVerified: appStatus === 'approved'
+              });
+            } else {
+              console.error('No existing sessions found despite "already exists" error');
+              throw new Error('No existing sessions found');
+            }
+          } catch (listError) {
+            console.error('Failed to list existing sessions:', listError);
+            
+            // If listing fails, try direct HTTP request with idempotent=true
+            console.log('Attempting direct HTTP request with idempotent=true');
+            
+            try {
+              const response = await fetch(`${plaidClient.configuration.basePath}/identity_verification/create?idempotent=true`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
+                  'PLAID-SECRET': process.env.PLAID_SECRET,
+                },
+                body: JSON.stringify(idvRequest)
+              });
+              
+              if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+              }
+              
+              const idempotentResponse = await response.json();
+              idvId = idempotentResponse.id;
+              
+              console.log(`IDV session retrieved with idempotent: ${idvId}`);
+              
+              await User.findByIdAndUpdate(userId, { 
+                plaidIdentityVerificationId: idvId,
+                plaidIdentityStatus: 'pending'
+              });
+              
+            } catch (httpError) {
+              console.error('Direct HTTP request also failed:', httpError);
+              throw createError; // Re-throw original error
+            }
+          }
         } else {
           throw createError; // Re-throw other errors
         }
@@ -561,12 +628,49 @@ router.get('/accounts/:accountId/balance', authenticateToken, async (req, res) =
   }
 });
 
+// Debug endpoint to check Plaid configuration
+router.get('/debug/config', authenticateToken, async (req, res) => {
+  try {
+    const config = {
+      environment: process.env.PLAID_ENV || 'sandbox',
+      client_id_set: !!process.env.PLAID_CLIENT_ID,
+      secret_set: !!process.env.PLAID_SECRET,
+      products: process.env.PLAID_PRODUCTS || 'Not set',
+      country_codes: process.env.PLAID_COUNTRY_CODES || 'Not set',
+      idv_template_id_set: !!process.env.PLAID_IDV_TEMPLATE_ID,
+      webhook_url: process.env.PLAID_WEBHOOKS || 'Not set'
+    };
+    
+    // Test basic Plaid connectivity
+    try {
+      await plaidClient.institutionsGet({
+        count: 1,
+        offset: 0,
+        country_codes: ['US']
+      });
+      config.plaid_connectivity = 'Success';
+    } catch (testError) {
+      config.plaid_connectivity = `Failed: ${testError.message}`;
+    }
+    
+    res.json({
+      success: true,
+      config
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Webhook handler for Plaid events
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
-    const { webhook_type, webhook_code, item_id } = req.body;
+    const { webhook_type, webhook_code, item_id, identity_verification_id } = req.body;
     
-    console.log('Plaid webhook received:', { webhook_type, webhook_code, item_id });
+    console.log('Plaid webhook received:', { webhook_type, webhook_code, item_id, identity_verification_id });
     
     // Handle different webhook types
     switch (webhook_type) {
@@ -578,7 +682,39 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         break;
       case 'IDENTITY_VERIFICATION':
         console.log(`Identity verification webhook: ${webhook_code}`);
-        // Handle identity verification status updates
+        if (identity_verification_id) {
+          // Update user's verification status
+          try {
+            const idvResponse = await plaidClient.identityVerificationGet({
+              identity_verification_id: identity_verification_id
+            });
+            
+            const status = idvResponse.data.status;
+            let appStatus = 'pending';
+            
+            if (status === 'success') {
+              appStatus = 'approved';
+            } else if (status === 'failed') {
+              appStatus = 'failed';
+            } else if (status === 'pending_review') {
+              appStatus = 'pending_review';
+            }
+            
+            // Find and update user
+            const User = getUserModel();
+            await User.findOneAndUpdate(
+              { plaidIdentityVerificationId: identity_verification_id },
+              { 
+                plaidIdentityStatus: appStatus,
+                personaVerified: appStatus === 'approved'
+              }
+            );
+            
+            console.log(`Updated user verification status to: ${appStatus}`);
+          } catch (updateError) {
+            console.log('Error updating verification status from webhook:', updateError);
+          }
+        }
         break;
       default:
         console.log(`Unhandled webhook type: ${webhook_type}`);
