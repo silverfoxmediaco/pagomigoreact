@@ -1,5 +1,31 @@
 // src/pages/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
+import {
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  Avatar,
+  Chip,
+  Button,
+  Box,
+  Paper,
+  Divider,
+  IconButton,
+  Skeleton,
+  Alert,
+  Stack
+} from '@mui/material';
+import {
+  Edit as EditIcon,
+  AccountBalanceWallet as WalletIcon,
+  QrCode as QrCodeIcon,
+  AccountBalance as BankIcon,
+  Verified as VerifiedIcon,
+  Pending as PendingIcon,
+  Error as ErrorIcon
+} from '@mui/icons-material';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useLanguage } from '../context/LanguageContext';
@@ -7,9 +33,7 @@ import EditProfileModal from '../components/UserProfile/EditProfileModal';
 import Navigation from '../components/Navigation';
 import PlaidBankingSection from '../Plaid/PlaidBankingSection';
 import Footer from '../components/Footer';
-import BankingSection from '../UnitBanking/BankingSection';
 import ProfileQRCode from '../ProfileQRCode';
-import styles from '../styles/Dashboard.module.css';
 
 const Dashboard = () => {
   const { t } = useLanguage();
@@ -20,11 +44,6 @@ const Dashboard = () => {
   // Your existing hooks
   const { userData, loading, error, fetchProfile } = useUserProfile();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isSendMoneyModalOpen, setIsSendMoneyModalOpen] = useState(false);
-  const [isRequestMoneyModalOpen, setIsRequestMoneyModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('transactions');
-  
-  // Updated token state
   const [unitToken, setUnitToken] = useState(null);
 
   // Unit settings for styling
@@ -52,11 +71,10 @@ const Dashboard = () => {
     }
   };
 
-  // FIXED: Updated useEffect to handle both Auth0 and fallback token with proper authentication
+  // Unit token fetch
   useEffect(() => {
     const fetchUnitToken = async () => {
       try {
-        // Get the authentication token
         let authToken;
         
         if (isAuthenticated) {
@@ -73,7 +91,6 @@ const Dashboard = () => {
           return;
         }
 
-        // Make authenticated request to Unit token endpoint
         const response = await fetch('/api/unit/token', {
           method: 'GET',
           headers: {
@@ -92,7 +109,6 @@ const Dashboard = () => {
 
       } catch (err) {
         console.error('Failed to fetch Unit token:', err);
-        // Use demo token as fallback
         setUnitToken("demo.jwt.token");
         console.log('Using demo token as fallback');
       }
@@ -101,15 +117,13 @@ const Dashboard = () => {
     fetchUnitToken();
   }, [isAuthenticated, getAccessTokenSilently]);
 
-  // Add profile refresh listener
+  // Profile refresh listener
   useEffect(() => {
     const handleProfileUpdate = () => {
       console.log('Profile updated event received, refreshing user data...');
-      // If fetchProfile is available from useUserProfile, use it
       if (fetchProfile) {
         fetchProfile();
       } else {
-        // Fallback to page reload
         window.location.reload();
       }
     };
@@ -128,207 +142,317 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  const getVerificationStatus = () => {
-    if (!userData) return t('unknown');
-    
-    if (userData.phone_verified) {
-      return <span className={styles.statusVerified}>{t('verified')}</span>;
-    } else {
-      return <span className={styles.statusUnverified}>{t('unverified')}</span>;
-    }
-  };
+  const getStatusChip = (status, type = 'kyc') => {
+    const configs = {
+      kyc: {
+        completed: { label: t('completed'), color: 'success', icon: <VerifiedIcon sx={{ fontSize: 16 }} /> },
+        failed: { label: t('failed'), color: 'error', icon: <ErrorIcon sx={{ fontSize: 16 }} /> },
+        pending: { label: t('pending'), color: 'warning', icon: <PendingIcon sx={{ fontSize: 16 }} /> }
+      },
+      phone: {
+        true: { label: t('verified'), color: 'success', icon: <VerifiedIcon sx={{ fontSize: 16 }} /> },
+        false: { label: t('unverified'), color: 'warning', icon: <PendingIcon sx={{ fontSize: 16 }} /> }
+      }
+    };
 
-  const getKycStatus = () => {
-    if (!userData) return t('unknown');
+    const config = configs[type]?.[status] || configs[type]?.pending || configs.kyc.pending;
     
-    switch (userData.kyc_status) {
-      case 'completed':
-        return <span className={styles.statusCompleted}>{t('completed')}</span>;
-      case 'failed':
-        return <span className={styles.statusFailed}>{t('failed')}</span>;
-      case 'pending':
-      default:
-        return <span className={styles.statusPending}>{t('pending')}</span>;
-    }
-  };
-
-  // Show Auth0 loading state
-  if (isLoading) {
     return (
-      <div className={styles.dashboardContainer}>
+      <Chip
+        label={config.label}
+        color={config.color}
+        size="small"
+        icon={config.icon}
+        variant="outlined"
+      />
+    );
+  };
+
+  // Show loading state
+  if (isLoading || (loading && !userData)) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Navigation />
-        <main className={styles.dashboardContent}>
-          <div className={styles.dashboardLoading}>{t('loading')} authentication...</div>
-        </main>
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
+          <Grid container spacing={3}>
+            {[...Array(6)].map((_, index) => (
+              <Grid item xs={12} md={6} key={index}>
+                <Card>
+                  <CardContent>
+                    <Skeleton variant="text" height={40} />
+                    <Skeleton variant="rectangular" height={100} sx={{ mt: 2 }} />
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
         <Footer />
-      </div>
+      </Box>
+    );
+  }
+
+  // Show error state
+  if (error && !userData) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Navigation />
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
+          <Alert 
+            severity="error" 
+            action={
+              <Button color="inherit" size="small" onClick={() => window.location.reload()}>
+                Reload
+              </Button>
+            }
+          >
+            {error}
+          </Alert>
+        </Container>
+        <Footer />
+      </Box>
     );
   }
 
   return (
-    <div className={styles.dashboardContainer}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
       <Navigation />
       
-      <main className={styles.dashboardContent}>
-        <div className={styles.dashboardHeader}>
-          <h1>{t('dashboard')}</h1>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
+        {/* Header Section */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600, color: '#0033cc' }}>
+            {t('dashboard')}
+          </Typography>
           {userData && (
-            <div className={styles.welcomeMessage}>
+            <Typography variant="h6" color="text.secondary">
               {t('welcomeBack')}, {userData.name}!
-            </div>
+            </Typography>
           )}
-          {/* Auth0 user info if available */}
           {isAuthenticated && user && (
-            <div className={styles.welcomeMessage} style={{ fontSize: '14px', color: '#666' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Auth0 User: {user.email}
-            </div>
+            </Typography>
           )}
-        </div>
-        
-        {loading && !userData ? (
-          <div className={styles.dashboardLoading}>{t('loading')} your dashboard...</div>
-        ) : error && !userData ? (
-          <div className={styles.dashboardError}>
-            {error}
-            <button onClick={() => window.location.reload()} className={styles.reloadBtn}>
-              Reload
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* User Profile Section */}
-            <section className={styles.dashboardSection}>
-              <div className={styles.sectionHeader}>
-                <h2>{t('myProfile')}</h2>
-                <button 
-                  className={styles.editProfileBtn}
-                  onClick={() => setIsEditModalOpen(true)}
+        </Box>
+
+        <Grid container spacing={3}>
+          {/* User Profile Card */}
+          <Grid item xs={12} md={6}>
+            <Card sx={{ height: '100%' }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+                    {t('myProfile')}
+                  </Typography>
+                  <IconButton 
+                    color="primary" 
+                    onClick={() => setIsEditModalOpen(true)}
+                    size="small"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                  <Avatar 
+                    sx={{ 
+                      width: 80, 
+                      height: 80, 
+                      bgcolor: '#0033cc', 
+                      fontSize: '2rem',
+                      fontWeight: 600,
+                      mr: 2 
+                    }}
+                  >
+                    {userData?.name ? userData.name.charAt(0).toUpperCase() : 'U'}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {userData?.name || 'User'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      @{userData?.username || 'username'}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Stack spacing={2}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('phone')}:
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2">
+                        {userData?.phone || t('notProvided')}
+                      </Typography>
+                      {getStatusChip(userData?.phone_verified, 'phone')}
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('email')}:
+                    </Typography>
+                    <Typography variant="body2">
+                      {userData?.email || t('notProvided')}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('address')}:
+                    </Typography>
+                    <Typography variant="body2">
+                      {userData?.address || t('notProvided')}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      ZIP Code:
+                    </Typography>
+                    <Typography variant="body2">
+                      {userData?.zipCode || t('notProvided')}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Account Info Card */}
+          <Grid item xs={12} md={6}>
+            <Card sx={{ height: '100%' }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <WalletIcon sx={{ mr: 1, color: '#0033cc' }} />
+                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+                    {t('accountBalance')}
+                  </Typography>
+                </Box>
+
+                <Typography 
+                  variant="h4" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    color: '#0033cc', 
+                    mb: 3 
+                  }}
                 >
-                  {t('editProfile')}
-                </button>
-              </div>
-              
-              <div className={styles.dashboardCards}>
-                <div className={styles.dashboardCard}>
-                  <div className={styles.profileInfo}>
-                    <div className={styles.profileAvatar}>
-                      {userData?.name ? userData.name.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                    
-                    <div className={styles.profileDetails}>
-                      <h3>{userData?.name || 'User'}</h3>
-                      <p className={styles.username}>@{userData?.username || 'username'}</p>
-                      
-                      <div className={styles.profileContact}>
-                        <div className={styles.contactItem}>
-                          <span className={styles.contactLabel}>{t('phone')}:</span>
-                          <span className={styles.contactValue}>{userData?.phone || t('notProvided')}</span>
-                          <span className={styles.phoneStatus}>{getVerificationStatus()}</span>
-                        </div>
-                        
-                        <div className={styles.contactItem}>
-                          <span className={styles.contactLabel}>{t('email')}:</span>
-                          <span className={styles.contactValue}>{userData?.email || t('notProvided')}</span>
-                        </div>
-                        
-                        <div className={styles.contactItem}>
-                          <span className={styles.contactLabel}>{t('address')}:</span>
-                          <span className={styles.contactValue}>{userData?.address || t('notProvided')}</span>
-                        </div>
+                  {userData ? formatCurrency(userData.balance) : '$0.00'}
+                </Typography>
 
-                        <div className={styles.contactItem}>
-                          <span className={styles.contactLabel}>ZIP Code:</span>
-                          <span className={styles.contactValue}>{userData?.zipCode || t('notProvided')}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className={styles.dashboardCard}>
-                  <div className={styles.accountInfo}>
-                    <div className={styles.accountBalance}>
-                      <h3>{t('accountBalance')}</h3>
-                      <div className={styles.balanceAmount}>{userData ? formatCurrency(userData.balance) : '$0.00'}</div>
-                    </div>
-                    
-                    <div className={styles.accountStatus}>
-                      <div className={styles.statusItem}>
-                        <span className={styles.statusLabel}>{t('kycStatus')}:</span>
-                        {getKycStatus()}
-                      </div>
-                      
-                      <div className={styles.statusItem}>
-                        <span className={styles.statusLabel}>{t('accountCreated')}:</span>
-                        <span className={styles.statusValue}>
-                          {userData?.createdAt 
-                            ? new Date(userData.createdAt).toLocaleDateString()
-                            : t('unknown')}
-                        </span>
-                      </div>
+                <Stack spacing={2}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('kycStatus')}:
+                    </Typography>
+                    {getStatusChip(userData?.kyc_status || 'pending', 'kyc')}
+                  </Box>
 
-                      <div className={styles.statusItem}>
-                        <span className={styles.statusLabel}>Verification Service:</span>
-                        <span className={styles.statusValue}>
-                          {userData?.verificationService || 'Not set'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('accountCreated')}:
+                    </Typography>
+                    <Typography variant="body2">
+                      {userData?.createdAt 
+                        ? new Date(userData.createdAt).toLocaleDateString()
+                        : t('unknown')}
+                    </Typography>
+                  </Box>
 
-            {/* External Bank Accounts Section */}
-            <section className={styles.dashboardSection}>
-              <div className={styles.sectionHeader}>
-                <h2>External Bank Accounts</h2>
-              </div>
-              <div className={styles.dashboardCard}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Verification Service:
+                    </Typography>
+                    <Chip 
+                      label={userData?.verificationService || 'Not set'}
+                      size="small"
+                      variant="outlined"
+                      color={userData?.verificationService ? 'primary' : 'default'}
+                    />
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* External Bank Accounts */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <BankIcon sx={{ mr: 1, color: '#0033cc' }} />
+                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+                    External Bank Accounts
+                  </Typography>
+                </Box>
                 <PlaidBankingSection />
-              </div>
-            </section>
+              </CardContent>
+            </Card>
+          </Grid>
 
-            {/* Updated Unit White Label App Section */}
-            <section className={styles.dashboardSection}>
-              <div className={styles.sectionHeader}>
-                <h2>Banking & Transactions</h2>
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                  Token Status: {unitToken ? 'Ready' : t('loading') + '...'} | 
+          {/* Unit Banking Section */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+                    Banking & Transactions
+                  </Typography>
+                  <Chip 
+                    label={unitToken ? 'Ready' : 'Loading...'}
+                    color={unitToken ? 'success' : 'default'}
+                    size="small"
+                  />
+                </Box>
+                
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   Auth Method: {isAuthenticated ? 'Auth0' : 'Traditional'}
-                </div>
-              </div>
-              <div className={styles.unitAppContainer}>
+                </Typography>
+
                 {unitToken ? (
-                  <unit-elements-white-label-app
-                    jwt-token={unitToken}
-                    settings-json={JSON.stringify(unitSettings)}
-                  ></unit-elements-white-label-app>
+                  <Box sx={{ mt: 2 }}>
+                    <unit-elements-white-label-app
+                      jwt-token={unitToken}
+                      settings-json={JSON.stringify(unitSettings)}
+                    ></unit-elements-white-label-app>
+                  </Box>
                 ) : (
-                  <div style={{ 
-                    padding: '20px', 
-                    textAlign: 'center', 
-                    backgroundColor: '#f5f5f5', 
-                    borderRadius: '8px' 
-                  }}>
-                    {t('loading')} banking interface...
-                  </div>
+                  <Paper 
+                    sx={{ 
+                      p: 3, 
+                      textAlign: 'center', 
+                      bgcolor: '#f5f5f5',
+                      border: '1px dashed #ddd'
+                    }}
+                  >
+                    <Typography color="text.secondary">
+                      {t('loading')} banking interface...
+                    </Typography>
+                  </Paper>
                 )}
-              </div>
-            </section>
-            
-            {/* QR Code Section */}
-            <section className={styles.dashboardSection}>
-              <div className={styles.sectionHeader}>
-                <h2>My Profile QR Code</h2>
-              </div>
-              <div className={styles.dashboardCard}>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* QR Code Section */}
+          <Grid item xs={12} md={6}>
+            <Card sx={{ height: '100%' }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <QrCodeIcon sx={{ mr: 1, color: '#0033cc' }} />
+                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+                    My Profile QR Code
+                  </Typography>
+                </Box>
                 <ProfileQRCode userData={userData} />
-              </div>
-            </section>
-          </>
-        )}
-      </main>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </Container>
       
       <Footer />
       
@@ -338,8 +462,7 @@ const Dashboard = () => {
         onClose={() => setIsEditModalOpen(false)}
         userData={userData}
       />
-      
-    </div>
+    </Box>
   );
 };
 
