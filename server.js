@@ -8,9 +8,38 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const plaidRoutes = require('./routes/plaidRoutes');
-const personaRoutes = require('./routes/persona');
-const unitRoutes = require('./routes/unit');
+
+// Safe route loading with detailed error handling
+console.log('Loading routes...');
+
+let plaidRoutes, personaRoutes, unitRoutes;
+
+try {
+  console.log('Loading plaidRoutes...');
+  plaidRoutes = require('./routes/plaidRoutes');
+  console.log('✓ Plaid routes loaded successfully');
+} catch (error) {
+  console.error('✗ Error loading plaid routes:', error.message);
+  console.error('Stack:', error.stack);
+}
+
+try {
+  console.log('Loading personaRoutes...');
+  personaRoutes = require('./routes/persona');
+  console.log('✓ Persona routes loaded successfully');
+} catch (error) {
+  console.error('✗ Error loading persona routes:', error.message);
+  console.error('Stack:', error.stack);
+}
+
+try {
+  console.log('Loading unitRoutes...');
+  unitRoutes = require('./routes/unit');
+  console.log('✓ Unit routes loaded successfully');
+} catch (error) {
+  console.error('✗ Error loading unit routes:', error.message);
+  console.error('Stack:', error.stack);
+}
 
 // ADD MAILGUN (MODERN PACKAGE)
 const Mailgun = require('mailgun.js');
@@ -23,14 +52,6 @@ const mg = mailgun.client({
   key: process.env.MAILGUN_API_KEY || 'your-mailgun-api-key',
   url: 'https://api.mailgun.net'
 });
-
-/* 
-// TWILIO - COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
-const twilio = require('twilio');
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const client = twilio(accountSid, authToken);
-*/
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -49,8 +70,8 @@ const UserSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: false, // Changed to false since we're using email verification
-    sparse: true,    // Allows multiple null values
+    required: false,
+    sparse: true,
     trim: true
   },
   username: {
@@ -67,7 +88,7 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,  // Now required for email verification
+    required: true,
     unique: true,
     trim: true,
     lowercase: true
@@ -80,12 +101,10 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  // ADD DIRECT ADDRESS FIELD
   address: {
     type: String,
     trim: true
   },
-  // UPDATED PLAID ACCOUNTS WITH COMPLETE FIELDS
   plaidAccounts: [{
     accessToken: String,
     itemId: String,
@@ -94,20 +113,18 @@ const UserSchema = new mongoose.Schema({
     accountType: String,
     linkedAt: { type: Date, default: Date.now }
   }],
-  // NEW PLAID IDENTITY VERIFICATION FIELDS
   plaidIdentityVerificationId: String,
   plaidIdentityStatus: {
     type: String,
     enum: ['pending', 'approved', 'failed', 'pending_review'],
     default: 'pending'
   },
-  // PERSONA IDENTITY VERIFICATION FIELDS
   personaVerified: {
     type: Boolean,
     default: false
   },
   personaInquiryId: String,
-  persona_inquiry_id: String, // Alternative field name for consistency
+  persona_inquiry_id: String,
   persona_status: {
     type: String,
     enum: ['pending', 'created', 'completed', 'approved', 'failed', 'declined', 'needs_review', 'pending_review', 'expired'],
@@ -138,17 +155,16 @@ const UserSchema = new mongoose.Schema({
       zipCode: String,
       country: { type: String, default: 'US' }
     },
-    ssn: String // Encrypted in production
+    ssn: String
   }
 }, {
-  timestamps: true // Adds createdAt and updatedAt
+  timestamps: true
 });
 
 const User = mongoose.model('User', UserSchema);
 
 const buildPath = path.join(__dirname, 'build');
 
-// Check if build directory exists
 if (fs.existsSync(buildPath)) {
   console.log('Build directory found');
 } else {
@@ -178,25 +194,41 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Database middleware - provides access to MongoDB for routes
+// Database middleware
 const databaseMiddleware = (req, res, next) => {
   req.db = mongoose.connection.db;
   next();
 };
 
-// API Routes
-app.use('/api/plaid', plaidRoutes);
-app.use('/api/persona', authenticateToken, databaseMiddleware, personaRoutes);
-app.use('/api/unit', authenticateToken, unitRoutes);
+// API Routes - Only add routes that loaded successfully
+console.log('Setting up API routes...');
 
-// Unit Banking API routes are now handled by /api/unit routes
+if (plaidRoutes) {
+  console.log('Adding Plaid routes to /api/plaid');
+  app.use('/api/plaid', plaidRoutes);
+} else {
+  console.log('Skipping Plaid routes - failed to load');
+}
+
+if (personaRoutes) {
+  console.log('Adding Persona routes to /api/persona');
+  app.use('/api/persona', authenticateToken, databaseMiddleware, personaRoutes);
+} else {
+  console.log('Skipping Persona routes - failed to load');
+}
+
+if (unitRoutes) {
+  console.log('Adding Unit routes to /api/unit');
+  app.use('/api/unit', authenticateToken, unitRoutes);
+} else {
+  console.log('Skipping Unit routes - failed to load');
+}
 
 // EMAIL VERIFICATION ENDPOINTS (MODERN MAILGUN)
 app.post('/api/email/send-verification', async (req, res) => {
   try {
     const { email, name } = req.body;
     
-    // Validate email format
     if (!email) {
       throw new Error('Email is required');
     }
@@ -210,18 +242,15 @@ app.post('/api/email/send-verification', async (req, res) => {
       throw new Error('Invalid email format');
     }
     
-    // Generate 6-digit verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Store verification code temporarily (in production, use Redis or database)
     global.verificationCodes = global.verificationCodes || {};
     global.verificationCodes[email] = {
       code: verificationCode,
-      expires: Date.now() + 10 * 60 * 1000, // 10 minutes
+      expires: Date.now() + 10 * 60 * 1000,
       attempts: 0
     };
     
-    // Prepare email content (MODERN MAILGUN API)
     const messageData = {
       from: `PagoMigo <noreply@${process.env.MAILGUN_DOMAIN}>`,
       to: email,
@@ -252,7 +281,6 @@ app.post('/api/email/send-verification', async (req, res) => {
       text: `Welcome to PagoMigo${name ? `, ${name}` : ''}! Your verification code is: ${verificationCode}. This code will expire in 10 minutes.`
     };
     
-    // Send email via Mailgun (MODERN API)
     await mg.messages.create(process.env.MAILGUN_DOMAIN, messageData);
     
     res.json({ 
@@ -281,7 +309,6 @@ app.post('/api/email/verify-code', async (req, res) => {
       });
     }
     
-    // Check stored verification code
     const storedData = global.verificationCodes?.[email];
     
     if (!storedData) {
@@ -291,7 +318,6 @@ app.post('/api/email/verify-code', async (req, res) => {
       });
     }
     
-    // Check if expired
     if (Date.now() > storedData.expires) {
       delete global.verificationCodes[email];
       return res.status(400).json({
@@ -300,7 +326,6 @@ app.post('/api/email/verify-code', async (req, res) => {
       });
     }
     
-    // Check attempts
     if (storedData.attempts >= 3) {
       delete global.verificationCodes[email];
       return res.status(400).json({
@@ -309,7 +334,6 @@ app.post('/api/email/verify-code', async (req, res) => {
       });
     }
     
-    // Verify code
     if (storedData.code !== code.toString()) {
       storedData.attempts++;
       return res.status(400).json({
@@ -318,7 +342,6 @@ app.post('/api/email/verify-code', async (req, res) => {
       });
     }
     
-    // Success - clean up
     delete global.verificationCodes[email];
     
     res.json({ 
@@ -336,16 +359,11 @@ app.post('/api/email/verify-code', async (req, res) => {
   }
 });
 
-/*
-// TWILIO VERIFY ENDPOINTS - COMMENTED OUT UNTIL A2P 10DLC REGISTRATION IS COMPLETED
-*/
-
-// USER ACCOUNT CREATION (PRODUCTION READY)
+// USER ACCOUNT CREATION
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { name, phone, email, username, password, phoneVerified, emailVerified } = req.body;
     
-    // Validate required fields - email is now required, phone is optional
     if (!name || !email || !username || !password) {
       return res.status(400).json({
         success: false,
@@ -353,7 +371,6 @@ app.post('/api/auth/signup', async (req, res) => {
       });
     }
 
-    // Validate password length
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
@@ -361,7 +378,6 @@ app.post('/api/auth/signup', async (req, res) => {
       });
     }
     
-    // Check if user already exists
     const existingUser = await User.findOne({
       $or: [
         { username: username.toLowerCase() },
@@ -386,11 +402,9 @@ app.post('/api/auth/signup', async (req, res) => {
       });
     }
     
-    // Hash password
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
-    // Create new user
     const newUser = new User({
       name: name.trim(),
       email: email.toLowerCase().trim(),
@@ -404,7 +418,6 @@ app.post('/api/auth/signup', async (req, res) => {
     
     await newUser.save();
     
-    // Generate JWT token
     const token = jwt.sign(
       { 
         userId: newUser._id,
@@ -415,7 +428,6 @@ app.post('/api/auth/signup', async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRY || '7d' }
     );
     
-    // Return user data (without password)
     const userResponse = {
       id: newUser._id,
       name: newUser.name,
@@ -437,7 +449,6 @@ app.post('/api/auth/signup', async (req, res) => {
   } catch (error) {
     console.error('Signup error:', error.message);
     
-    // Handle MongoDB validation errors
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         success: false,
@@ -446,7 +457,6 @@ app.post('/api/auth/signup', async (req, res) => {
       });
     }
     
-    // Handle duplicate key errors
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(400).json({
@@ -463,7 +473,7 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-// USER PROFILE ENDPOINT (FIXED ADDRESS BUG)
+// USER PROFILE ENDPOINT
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
@@ -475,19 +485,15 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
       });
     }
     
-    // Helper function to safely get address as string
     const getAddressString = (user) => {
-      // Try direct address field first
       if (user.address && typeof user.address === 'string') {
         return user.address;
       }
       
-      // Try profile.address if it's a string
       if (user.profile?.address && typeof user.profile.address === 'string') {
         return user.profile.address;
       }
       
-      // Try building address from profile.address object
       if (user.profile?.address && typeof user.profile.address === 'object') {
         const addr = user.profile.address;
         const parts = [addr.street, addr.city, addr.state].filter(Boolean);
@@ -496,18 +502,16 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
         }
       }
       
-      // Default fallback
       return 'Not provided';
     };
     
-    // Format the response to match what your frontend expects
     const profileData = {
       name: user.name,
       username: user.username,
       phone: user.phone,
       phone_verified: user.phoneVerified,
       email: user.email,
-      address: getAddressString(user), // FIXED: Always returns a string
+      address: getAddressString(user),
       kyc_status: user.persona_status || (user.personaVerified ? 'completed' : 'pending'),
       persona_status: user.persona_status || 'pending',
       persona_inquiry_id: user.persona_inquiry_id || user.personaInquiryId,
@@ -527,7 +531,7 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// UPDATE USER PROFILE (FIXED TO HANDLE ALL FIELDS INCLUDING ADDRESS)
+// UPDATE USER PROFILE
 app.put('/api/user/profile', authenticateToken, async (req, res) => {
   try {
     const { name, username, email, phone, address, profile } = req.body;
@@ -535,14 +539,11 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
     
     const updateData = {};
     
-    // Handle name update
     if (name) {
       updateData.name = name.trim();
     }
     
-    // Handle username update
     if (username) {
-      // Check if username already exists
       const existingUser = await User.findOne({ 
         username: username.toLowerCase(),
         _id: { $ne: userId }
@@ -558,9 +559,7 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
       updateData.username = username.toLowerCase().trim();
     }
     
-    // Handle email update
     if (email) {
-      // Check if email already exists
       const existingUser = await User.findOne({ 
         email: email.toLowerCase(),
         _id: { $ne: userId }
@@ -576,9 +575,7 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
       updateData.email = email.toLowerCase().trim();
     }
     
-    // Handle phone update
     if (phone) {
-      // Check if phone already exists
       const existingUser = await User.findOne({ 
         phone: phone,
         _id: { $ne: userId }
@@ -594,12 +591,10 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
       updateData.phone = phone.trim();
     }
     
-    // Handle address update - ensure it's always a string
     if (address !== undefined) {
       updateData.address = typeof address === 'string' ? address.trim() : '';
     }
     
-    // Handle profile object update
     if (profile) {
       updateData.profile = { ...updateData.profile, ...profile };
     }
@@ -638,7 +633,6 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
     
-    // Find user by username, email, or phone
     const user = await User.findOne({
       $or: [
         { username: username.toLowerCase() },
@@ -654,7 +648,6 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
     
-    // Check password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(400).json({
@@ -663,7 +656,6 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
     
-    // Generate token
     const token = jwt.sign(
       { 
         userId: user._id,
@@ -709,7 +701,6 @@ app.get('/api/ping', (req, res) => {
   res.json({ message: 'API is working!' });
 });
 
-// EMAIL TEST ENDPOINT (MODERN MAILGUN)
 app.get('/api/email/test', (req, res) => {
   res.json({ 
     message: 'Mailgun Email API is ready!',
@@ -746,5 +737,7 @@ app.listen(PORT, function() {
   console.log('Mailgun Email endpoints ready');
   console.log('Auth endpoints ready');
   console.log('User profile endpoints ready');
-  console.log('Persona identity verification endpoints ready');
+  if (personaRoutes) console.log('Persona identity verification endpoints ready');
+  if (plaidRoutes) console.log('Plaid banking endpoints ready');
+  if (unitRoutes) console.log('Unit banking endpoints ready');
 });
