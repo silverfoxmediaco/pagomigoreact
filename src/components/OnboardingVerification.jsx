@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { usePlaid } from '../hooks/usePlaid';
-import { usePersona } from '../hooks/usePersona';
+import { usePlaid } from '../Plaid/usePlaid';
+import { usePersona } from '../Persona/usePersona';
 
 // MUI Components
 import {
