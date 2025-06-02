@@ -160,7 +160,9 @@ const Dashboard = () => {
     if (userData.phone_verified) {
       return <Chip icon={<VerifiedIcon />} label={t('verified')} size="small" color="success" />;
     } else {
-      return <Chip icon={<PendingIcon />} label={t('unverified')} size="small" color="warning" />;
+      // COMMENTED OUT: Remove unverified text for now
+      // return <Chip icon={<PendingIcon />} label={t('unverified')} size="small" color="warning" />;
+      return null;
     }
   };
 
@@ -246,10 +248,10 @@ const Dashboard = () => {
           </Alert>
         ) : (
           <>
-            {/* Profile and Account Overview */}
+            {/* Profile and Account Overview - Updated Layout */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-              {/* Profile Card */}
-              <Grid item xs={12} lg={8}>
+              {/* Profile Card - 60% width on desktop, 100% on mobile */}
+              <Grid item xs={12} md={7.2}>
                 <Card elevation={2} sx={{ height: '100%' }}>
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
@@ -360,8 +362,8 @@ const Dashboard = () => {
                 </Card>
               </Grid>
               
-              {/* Account Balance Card */}
-              <Grid item xs={12} lg={4}>
+              {/* Account Balance Card - 40% width on desktop, 100% on mobile */}
+              <Grid item xs={12} md={4.8}>
                 <Card elevation={2} sx={{ height: '100%' }}>
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
@@ -409,10 +411,9 @@ const Dashboard = () => {
               </Grid>
             </Grid>
 
-            {/* Banking Sections */}
+            {/* External Bank Accounts - Full Width */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-              {/* External Bank Accounts */}
-              <Grid item xs={12} lg={6}>
+              <Grid item xs={12}>
                 <Card elevation={2}>
                   <CardContent sx={{ p: 3 }}>
                     <Typography variant="h5" component="h2" sx={{ fontWeight: 600, mb: 3 }}>
@@ -422,9 +423,11 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               </Grid>
+            </Grid>
 
-              {/* Unit Banking */}
-              <Grid item xs={12} lg={6}>
+            {/* Banking & Transactions - Full Width */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+              <Grid item xs={12}>
                 <Card elevation={2}>
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
