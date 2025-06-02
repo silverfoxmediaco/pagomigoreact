@@ -93,6 +93,16 @@ const UserSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+  zipCode: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  verificationService: {
+    type: String,
+    enum: ['plaid', 'persona'],
+    default: 'persona'
+  },
   phoneVerified: {
     type: Boolean,
     default: false
@@ -362,12 +372,29 @@ app.post('/api/email/verify-code', async (req, res) => {
 // USER ACCOUNT CREATION
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { name, phone, email, username, password, phoneVerified, emailVerified } = req.body;
+    const { 
+      name, 
+      phone, 
+      email, 
+      username, 
+      password, 
+      phoneVerified, 
+      emailVerified,
+      zipCode,
+      verificationService
+    } = req.body;
     
     if (!name || !email || !username || !password) {
       return res.status(400).json({
         success: false,
         message: 'Name, email, username, and password are required'
+      });
+    }
+
+    if (!zipCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'ZIP/postal code is required'
       });
     }
 
@@ -413,6 +440,8 @@ app.post('/api/auth/signup', async (req, res) => {
       phone: phone ? phone.trim() : null,
       phoneVerified: phoneVerified || false,
       emailVerified: emailVerified || false,
+      zipCode: zipCode.trim(),
+      verificationService: verificationService || 'persona',
       balance: 0
     });
     
@@ -436,6 +465,8 @@ app.post('/api/auth/signup', async (req, res) => {
       username: newUser.username,
       phoneVerified: newUser.phoneVerified,
       emailVerified: newUser.emailVerified,
+      zipCode: newUser.zipCode,
+      verificationService: newUser.verificationService,
       createdAt: newUser.createdAt
     };
     
@@ -512,6 +543,8 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
       phone_verified: user.phoneVerified,
       email: user.email,
       address: getAddressString(user),
+      zipCode: user.zipCode,
+      verificationService: user.verificationService,
       kyc_status: user.persona_status || (user.personaVerified ? 'completed' : 'pending'),
       persona_status: user.persona_status || 'pending',
       persona_inquiry_id: user.persona_inquiry_id || user.personaInquiryId,
@@ -534,7 +567,7 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
 // UPDATE USER PROFILE
 app.put('/api/user/profile', authenticateToken, async (req, res) => {
   try {
-    const { name, username, email, phone, address, profile } = req.body;
+    const { name, username, email, phone, address, profile, zipCode } = req.body;
     const userId = req.user.userId;
     
     const updateData = {};
@@ -593,6 +626,10 @@ app.put('/api/user/profile', authenticateToken, async (req, res) => {
     
     if (address !== undefined) {
       updateData.address = typeof address === 'string' ? address.trim() : '';
+    }
+
+    if (zipCode !== undefined) {
+      updateData.zipCode = typeof zipCode === 'string' ? zipCode.trim() : '';
     }
     
     if (profile) {
@@ -677,7 +714,9 @@ app.post('/api/auth/login', async (req, res) => {
         phone: user.phone,
         email: user.email,
         phoneVerified: user.phoneVerified,
-        emailVerified: user.emailVerified
+        emailVerified: user.emailVerified,
+        zipCode: user.zipCode,
+        verificationService: user.verificationService
       }
     });
     

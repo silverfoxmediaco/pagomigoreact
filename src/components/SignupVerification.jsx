@@ -70,7 +70,16 @@ const SignupVerification = () => {
     const result = await verifyCode(verificationCode);
     
     if (result.success) {
-      navigate('/dashboard');
+      // Check if user has a verification service preference stored
+      const verificationService = localStorage.getItem('verificationService');
+      
+      if (verificationService) {
+        // Redirect to identity verification onboarding
+        navigate('/onboarding/verify');
+      } else {
+        // Fallback to dashboard if no verification service is set
+        navigate('/dashboard');
+      }
     } else {
       setMessage(result.error || 'Invalid verification code');
       setIsError(true);
@@ -159,6 +168,19 @@ const SignupVerification = () => {
               Resend Code
             </button>
             */}
+          </div>
+
+          {/* Progress indicator */}
+          <div style={{ 
+            marginTop: '2rem', 
+            padding: '1rem', 
+            backgroundColor: '#f8f9fa', 
+            borderRadius: '8px',
+            textAlign: 'center'
+          }}>
+            <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
+              Next: Identity verification to secure your account
+            </p>
           </div>
         </div>
       </div>

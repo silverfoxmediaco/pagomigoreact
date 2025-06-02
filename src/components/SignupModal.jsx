@@ -117,7 +117,7 @@ const SignupModal = ({ isOpen: propIsOpen, onClose }) => {
     return () => {
       document.removeEventListener('keydown', handleEscKey);
     };
-  }, [isOpen, handleClose]);
+  }, [isOpen]);
 
   // Handle successful signup
   const handleSignupSuccess = () => {

@@ -7,15 +7,17 @@ export const API_BASE = process.env.REACT_APP_API_BASE_URL || '';
 export const AUTH_CONFIG = {
   JWT_ISSUER: 'pagomigo.com',
   JWT_AUDIENCE: 'pagomigo.com',
-  JWT_EXPIRY: '7d' // 7 days
+  JWT_EXPIRY: '30d' 
 };
 
 // App configuration
 export const APP_CONFIG = {
   APP_NAME: 'Pagomigo',
-  APP_DESCRIPTION: 'The digital wallet for the Hispanic world',
+  APP_DESCRIPTION: 'The digital wallet for the Hispanic Community',
+  APP_VERSION: '1.0.0',
+  APP_URL: 'https://www.pagomigo.com',
   SUPPORT_EMAIL: 'support@pagomigo.com',
-  COMPANY_NAME: 'Pagomigo.com L.L.C.'
+  COMPANY_NAME: 'Pagomigo L.L.C.'
 };
 
 // Feature flags

@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
         
         if (response.ok) {
           const responseData = await response.json();
-          setUser(responseData.user);
+          setUser(responseData);
           setIsAuthenticated(true);
         } else {
           // Token invalid, clear it
@@ -67,6 +67,8 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('AuthContext register called with:', userData);
       
       // Store user data for after verification
       setPendingUserData(userData);
@@ -282,6 +284,8 @@ export const AuthProvider = ({ children }) => {
   // Create user account after verification
   const createUserAccount = async (userData) => {
     try {
+      console.log('Creating user account with data:', userData);
+      
       const response = await fetch(`${API_BASE}/api/auth/signup`, {
         method: 'POST',
         headers: {
@@ -298,6 +302,11 @@ export const AuthProvider = ({ children }) => {
       
       if (!response.ok) {
         throw new Error(data.message || 'Account creation failed');
+      }
+      
+      // Store verification service for onboarding flow
+      if (userData.verificationService) {
+        localStorage.setItem('verificationService', userData.verificationService);
       }
       
       return { success: true, token: data.token, user: data.user };
@@ -329,6 +338,11 @@ export const AuthProvider = ({ children }) => {
       // Store token
       localStorage.setItem('token', data.token);
       
+      // Store verification service if available
+      if (data.user.verificationService) {
+        localStorage.setItem('verificationService', data.user.verificationService);
+      }
+      
       // Set user data from login response
       setUser(data.user);
       setIsAuthenticated(true);
@@ -359,6 +373,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       // Always clear local state regardless of server response
       localStorage.removeItem('token');
+      localStorage.removeItem('verificationService');
       
       setUser(null);
       setIsAuthenticated(false);
@@ -387,8 +402,14 @@ export const AuthProvider = ({ children }) => {
       }
       
       const responseData = await response.json();
-      setUser(responseData.user);
-      return responseData.user;
+      setUser(responseData);
+      
+      // Store verification service if available
+      if (responseData.verificationService) {
+        localStorage.setItem('verificationService', responseData.verificationService);
+      }
+      
+      return responseData;
     } catch (err) {
       console.error('Error fetching user profile:', err);
       setError(err.message);
