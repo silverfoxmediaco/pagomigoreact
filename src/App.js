@@ -10,6 +10,7 @@ import MoneyMover from './pages/MoneyMover';
 import Login from './pages/Login';
 import Signup from './components/Signup';
 import SignupVerification from './components/SignupVerification';
+import OnboardingVerification from './components/OnboardingVerification';
 import Dashboard from './pages/Dashboard.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Terms from './pages/Terms';
@@ -34,6 +35,13 @@ function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/fees" element={<Fees />} />
+            
+            {/* Onboarding Routes */}
+            <Route path="/onboarding/verify" element={
+              <ProtectedRoute>
+                <OnboardingVerification />
+              </ProtectedRoute>
+            } />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={

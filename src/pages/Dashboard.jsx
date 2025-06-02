@@ -1,31 +1,5 @@
 // src/pages/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Avatar,
-  Chip,
-  Button,
-  Box,
-  Paper,
-  Divider,
-  IconButton,
-  Skeleton,
-  Alert,
-  Stack
-} from '@mui/material';
-import {
-  Edit as EditIcon,
-  AccountBalanceWallet as WalletIcon,
-  QrCode as QrCodeIcon,
-  AccountBalance as BankIcon,
-  Verified as VerifiedIcon,
-  Pending as PendingIcon,
-  Error as ErrorIcon
-} from '@mui/icons-material';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useLanguage } from '../context/LanguageContext';
@@ -33,10 +7,45 @@ import EditProfileModal from '../components/UserProfile/EditProfileModal';
 import Navigation from '../components/Navigation';
 import PlaidBankingSection from '../Plaid/PlaidBankingSection';
 import Footer from '../components/Footer';
+import BankingSection from '../UnitBanking/BankingSection';
 import ProfileQRCode from '../ProfileQRCode';
+
+// MUI Components
+import {
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Avatar,
+  Chip,
+  Box,
+  Divider,
+  IconButton,
+  Alert,
+  Skeleton,
+  useTheme,
+  useMediaQuery,
+  Paper
+} from '@mui/material';
+import {
+  Edit as EditIcon,
+  AccountBalanceWallet as WalletIcon,
+  Verified as VerifiedIcon,
+  Pending as PendingIcon,
+  Error as ErrorIcon,
+  Phone as PhoneIcon,
+  Email as EmailIcon,
+  Home as HomeIcon,
+  CreditCard as CreditCardIcon
+} from '@mui/icons-material';
 
 const Dashboard = () => {
   const { t } = useLanguage();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   
   // Auth0 integration
   const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
@@ -71,10 +80,11 @@ const Dashboard = () => {
     }
   };
 
-  // Unit token fetch
+  // FIXED: Updated useEffect to handle both Auth0 and fallback token with proper authentication
   useEffect(() => {
     const fetchUnitToken = async () => {
       try {
+        // Get the authentication token
         let authToken;
         
         if (isAuthenticated) {
@@ -91,6 +101,7 @@ const Dashboard = () => {
           return;
         }
 
+        // Make authenticated request to Unit token endpoint
         const response = await fetch('/api/unit/token', {
           method: 'GET',
           headers: {
@@ -109,6 +120,7 @@ const Dashboard = () => {
 
       } catch (err) {
         console.error('Failed to fetch Unit token:', err);
+        // Use demo token as fallback
         setUnitToken("demo.jwt.token");
         console.log('Using demo token as fallback');
       }
@@ -117,7 +129,7 @@ const Dashboard = () => {
     fetchUnitToken();
   }, [isAuthenticated, getAccessTokenSilently]);
 
-  // Profile refresh listener
+  // Add profile refresh listener
   useEffect(() => {
     const handleProfileUpdate = () => {
       console.log('Profile updated event received, refreshing user data...');
@@ -142,47 +154,41 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  const getStatusChip = (status, type = 'kyc') => {
-    const configs = {
-      kyc: {
-        completed: { label: t('completed'), color: 'success', icon: <VerifiedIcon sx={{ fontSize: 16 }} /> },
-        failed: { label: t('failed'), color: 'error', icon: <ErrorIcon sx={{ fontSize: 16 }} /> },
-        pending: { label: t('pending'), color: 'warning', icon: <PendingIcon sx={{ fontSize: 16 }} /> }
-      },
-      phone: {
-        true: { label: t('verified'), color: 'success', icon: <VerifiedIcon sx={{ fontSize: 16 }} /> },
-        false: { label: t('unverified'), color: 'warning', icon: <PendingIcon sx={{ fontSize: 16 }} /> }
-      }
-    };
-
-    const config = configs[type]?.[status] || configs[type]?.pending || configs.kyc.pending;
+  const getVerificationStatusChip = () => {
+    if (!userData) return <Chip label={t('unknown')} size="small" color="default" />;
     
-    return (
-      <Chip
-        label={config.label}
-        color={config.color}
-        size="small"
-        icon={config.icon}
-        variant="outlined"
-      />
-    );
+    if (userData.phone_verified) {
+      return <Chip icon={<VerifiedIcon />} label={t('verified')} size="small" color="success" />;
+    } else {
+      return <Chip icon={<PendingIcon />} label={t('unverified')} size="small" color="warning" />;
+    }
   };
 
-  // Show loading state
-  if (isLoading || (loading && !userData)) {
+  const getKycStatusChip = () => {
+    if (!userData) return <Chip label={t('unknown')} size="small" color="default" />;
+    
+    switch (userData.kyc_status) {
+      case 'completed':
+        return <Chip icon={<VerifiedIcon />} label={t('completed')} size="small" color="success" />;
+      case 'failed':
+        return <Chip icon={<ErrorIcon />} label={t('failed')} size="small" color="error" />;
+      case 'pending':
+      default:
+        return <Chip icon={<PendingIcon />} label={t('pending')} size="small" color="warning" />;
+    }
+  };
+
+  // Show Auth0 loading state
+  if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <Navigation />
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
+        <Container maxWidth="xl" sx={{ flex: 1, py: 4 }}>
+          <Skeleton variant="text" height={60} sx={{ mb: 3 }} />
           <Grid container spacing={3}>
-            {[...Array(6)].map((_, index) => (
-              <Grid item xs={12} md={6} key={index}>
-                <Card>
-                  <CardContent>
-                    <Skeleton variant="text" height={40} />
-                    <Skeleton variant="rectangular" height={100} sx={{ mt: 2 }} />
-                  </CardContent>
-                </Card>
+            {[1, 2, 3, 4].map((item) => (
+              <Grid item xs={12} md={6} lg={3} key={item}>
+                <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
               </Grid>
             ))}
           </Grid>
@@ -192,12 +198,41 @@ const Dashboard = () => {
     );
   }
 
-  // Show error state
-  if (error && !userData) {
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Navigation />
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
+  return (
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#f5f7fb' }}>
+      <Navigation />
+      
+      <Container maxWidth="xl" sx={{ flex: 1, py: { xs: 2, md: 4 } }}>
+        {/* Header Section */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h3" component="h1" gutterBottom sx={{ 
+            fontSize: { xs: '2rem', md: '2.5rem' },
+            fontWeight: 600,
+            color: '#1a1a1a'
+          }}>
+            {t('dashboard')}
+          </Typography>
+          {userData && (
+            <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+              {t('welcomeBack')}, {userData.name}!
+            </Typography>
+          )}
+          {/* Auth0 user info if available */}
+          {isAuthenticated && user && (
+            <Typography variant="body2" color="text.secondary">
+              Auth0 User: {user.email}
+            </Typography>
+          )}
+        </Box>
+        
+        {loading && !userData ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <Box>
+              <Skeleton variant="text" width={200} height={40} sx={{ mb: 2 }} />
+              <Skeleton variant="rectangular" width="100%" height={300} sx={{ borderRadius: 2 }} />
+            </Box>
+          </Box>
+        ) : error && !userData ? (
           <Alert 
             severity="error" 
             action={
@@ -205,253 +240,252 @@ const Dashboard = () => {
                 Reload
               </Button>
             }
+            sx={{ mb: 3 }}
           >
             {error}
           </Alert>
-        </Container>
-        <Footer />
-      </Box>
-    );
-  }
-
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
-      <Navigation />
-      
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
-        {/* Header Section */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600, color: '#0033cc' }}>
-            {t('dashboard')}
-          </Typography>
-          {userData && (
-            <Typography variant="h6" color="text.secondary">
-              {t('welcomeBack')}, {userData.name}!
-            </Typography>
-          )}
-          {isAuthenticated && user && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Auth0 User: {user.email}
-            </Typography>
-          )}
-        </Box>
-
-        <Grid container spacing={3}>
-          {/* User Profile Card */}
-          <Grid item xs={12} md={6}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-                    {t('myProfile')}
-                  </Typography>
-                  <IconButton 
-                    color="primary" 
-                    onClick={() => setIsEditModalOpen(true)}
-                    size="small"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                </Box>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <Avatar 
-                    sx={{ 
-                      width: 80, 
-                      height: 80, 
-                      bgcolor: '#0033cc', 
-                      fontSize: '2rem',
-                      fontWeight: 600,
-                      mr: 2 
-                    }}
-                  >
-                    {userData?.name ? userData.name.charAt(0).toUpperCase() : 'U'}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {userData?.name || 'User'}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      @{userData?.username || 'username'}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Stack spacing={2}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {t('phone')}:
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2">
-                        {userData?.phone || t('notProvided')}
+        ) : (
+          <>
+            {/* Profile and Account Overview */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+              {/* Profile Card */}
+              <Grid item xs={12} lg={8}>
+                <Card elevation={2} sx={{ height: '100%' }}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                      <Typography variant="h5" component="h2" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
+                        {t('myProfile')}
                       </Typography>
-                      {getStatusChip(userData?.phone_verified, 'phone')}
+                      <Button
+                        variant="outlined"
+                        startIcon={<EditIcon />}
+                        onClick={() => setIsEditModalOpen(true)}
+                        size="small"
+                      >
+                        {t('editProfile')}
+                      </Button>
                     </Box>
-                  </Box>
+                    
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
+                      <Avatar 
+                        sx={{ 
+                          width: { xs: 80, sm: 100 }, 
+                          height: { xs: 80, sm: 100 }, 
+                          bgcolor: '#0033cc',
+                          fontSize: { xs: '1.5rem', sm: '2rem' },
+                          fontWeight: 600
+                        }}
+                      >
+                        {userData?.name ? userData.name.charAt(0).toUpperCase() : 'U'}
+                      </Avatar>
+                      
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          {userData?.name || 'User'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          @{userData?.username || 'username'}
+                        </Typography>
+                        
+                        <Grid container spacing={2}>
+                          <Grid item xs={12} sm={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                              <PhoneIcon color="action" fontSize="small" />
+                              <Typography variant="body2" color="text.secondary">
+                                {t('phone')}:
+                              </Typography>
+                              <Typography variant="body2">
+                                {userData?.phone || t('notProvided')}
+                              </Typography>
+                              {getVerificationStatusChip()}
+                            </Box>
+                          </Grid>
+                          
+                          <Grid item xs={12} sm={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                              <EmailIcon color="action" fontSize="small" />
+                              <Typography variant="body2" color="text.secondary">
+                                {t('email')}:
+                              </Typography>
+                              <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+                                {userData?.email || t('notProvided')}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          
+                          <Grid item xs={12}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                              <HomeIcon color="action" fontSize="small" />
+                              <Typography variant="body2" color="text.secondary">
+                                {t('address')}:
+                              </Typography>
+                              <Typography variant="body2">
+                                {userData?.address || t('notProvided')}
+                              </Typography>
+                            </Box>
+                          </Grid>
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {t('email')}:
+                          {userData?.zipCode && (
+                            <Grid item xs={12} sm={6}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                  ZIP Code:
+                                </Typography>
+                                <Typography variant="body2">
+                                  {userData.zipCode}
+                                </Typography>
+                              </Box>
+                            </Grid>
+                          )}
+
+                          {userData?.verificationService && (
+                            <Grid item xs={12} sm={6}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                  Verification Service:
+                                </Typography>
+                                <Chip 
+                                  label={userData.verificationService} 
+                                  size="small" 
+                                  variant="outlined"
+                                  color={userData.verificationService === 'plaid' ? 'primary' : 'secondary'}
+                                />
+                              </Box>
+                            </Grid>
+                          )}
+                        </Grid>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+              
+              {/* Account Balance Card */}
+              <Grid item xs={12} lg={4}>
+                <Card elevation={2} sx={{ height: '100%' }}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                      <WalletIcon color="primary" />
+                      <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
+                        {t('accountBalance')}
+                      </Typography>
+                    </Box>
+                    
+                    <Typography 
+                      variant="h3" 
+                      sx={{ 
+                        color: '#0033cc', 
+                        fontWeight: 700, 
+                        mb: 3,
+                        fontSize: { xs: '2rem', sm: '2.5rem' }
+                      }}
+                    >
+                      {userData ? formatCurrency(userData.balance) : '$0.00'}
                     </Typography>
-                    <Typography variant="body2">
-                      {userData?.email || t('notProvided')}
+                    
+                    <Divider sx={{ my: 2 }} />
+                    
+                    <Box sx={{ space: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {t('kycStatus')}:
+                        </Typography>
+                        {getKycStatusChip()}
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {t('accountCreated')}:
+                        </Typography>
+                        <Typography variant="body2">
+                          {userData?.createdAt 
+                            ? new Date(userData.createdAt).toLocaleDateString()
+                            : t('unknown')}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+
+            {/* Banking Sections */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+              {/* External Bank Accounts */}
+              <Grid item xs={12} lg={6}>
+                <Card elevation={2}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h5" component="h2" sx={{ fontWeight: 600, mb: 3 }}>
+                      External Bank Accounts
                     </Typography>
-                  </Box>
+                    <PlaidBankingSection />
+                  </CardContent>
+                </Card>
+              </Grid>
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {t('address')}:
+              {/* Unit Banking */}
+              <Grid item xs={12} lg={6}>
+                <Card elevation={2}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                      <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
+                        Banking & Transactions
+                      </Typography>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Token Status: {unitToken ? 'Ready' : t('loading') + '...'} | 
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Auth Method: {isAuthenticated ? 'Auth0' : 'Traditional'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Box sx={{ 
+                      minHeight: 400,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {unitToken ? (
+                        <unit-elements-white-label-app
+                          jwt-token={unitToken}
+                          settings-json={JSON.stringify(unitSettings)}
+                        ></unit-elements-white-label-app>
+                      ) : (
+                        <Box sx={{ 
+                          p: 3, 
+                          textAlign: 'center', 
+                          bgcolor: '#f5f5f5', 
+                          borderRadius: 2,
+                          width: '100%'
+                        }}>
+                          <Typography color="text.secondary">
+                            {t('loading')} banking interface...
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+            
+            {/* QR Code Section */}
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6} lg={4}>
+                <Card elevation={2}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h5" component="h2" sx={{ fontWeight: 600, mb: 3 }}>
+                      My Profile QR Code
                     </Typography>
-                    <Typography variant="body2">
-                      {userData?.address || t('notProvided')}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      ZIP Code:
-                    </Typography>
-                    <Typography variant="body2">
-                      {userData?.zipCode || t('notProvided')}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Account Info Card */}
-          <Grid item xs={12} md={6}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <WalletIcon sx={{ mr: 1, color: '#0033cc' }} />
-                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-                    {t('accountBalance')}
-                  </Typography>
-                </Box>
-
-                <Typography 
-                  variant="h4" 
-                  sx={{ 
-                    fontWeight: 700, 
-                    color: '#0033cc', 
-                    mb: 3 
-                  }}
-                >
-                  {userData ? formatCurrency(userData.balance) : '$0.00'}
-                </Typography>
-
-                <Stack spacing={2}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {t('kycStatus')}:
-                    </Typography>
-                    {getStatusChip(userData?.kyc_status || 'pending', 'kyc')}
-                  </Box>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {t('accountCreated')}:
-                    </Typography>
-                    <Typography variant="body2">
-                      {userData?.createdAt 
-                        ? new Date(userData.createdAt).toLocaleDateString()
-                        : t('unknown')}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Verification Service:
-                    </Typography>
-                    <Chip 
-                      label={userData?.verificationService || 'Not set'}
-                      size="small"
-                      variant="outlined"
-                      color={userData?.verificationService ? 'primary' : 'default'}
-                    />
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* External Bank Accounts */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <BankIcon sx={{ mr: 1, color: '#0033cc' }} />
-                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-                    External Bank Accounts
-                  </Typography>
-                </Box>
-                <PlaidBankingSection />
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Unit Banking Section */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-                    Banking & Transactions
-                  </Typography>
-                  <Chip 
-                    label={unitToken ? 'Ready' : 'Loading...'}
-                    color={unitToken ? 'success' : 'default'}
-                    size="small"
-                  />
-                </Box>
-                
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Auth Method: {isAuthenticated ? 'Auth0' : 'Traditional'}
-                </Typography>
-
-                {unitToken ? (
-                  <Box sx={{ mt: 2 }}>
-                    <unit-elements-white-label-app
-                      jwt-token={unitToken}
-                      settings-json={JSON.stringify(unitSettings)}
-                    ></unit-elements-white-label-app>
-                  </Box>
-                ) : (
-                  <Paper 
-                    sx={{ 
-                      p: 3, 
-                      textAlign: 'center', 
-                      bgcolor: '#f5f5f5',
-                      border: '1px dashed #ddd'
-                    }}
-                  >
-                    <Typography color="text.secondary">
-                      {t('loading')} banking interface...
-                    </Typography>
-                  </Paper>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* QR Code Section */}
-          <Grid item xs={12} md={6}>
-            <Card sx={{ height: '100%' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <QrCodeIcon sx={{ mr: 1, color: '#0033cc' }} />
-                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-                    My Profile QR Code
-                  </Typography>
-                </Box>
-                <ProfileQRCode userData={userData} />
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+                    <ProfileQRCode userData={userData} />
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </>
+        )}
       </Container>
       
       <Footer />
