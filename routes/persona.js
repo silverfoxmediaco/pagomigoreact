@@ -35,6 +35,7 @@ const personaApiCall = async (endpoint, method = 'GET', data = null) => {
   }
 
   console.log(`Persona API Call: ${method} ${url}`);
+  console.log('Request data:', JSON.stringify(data, null, 2));
   
   const response = await fetch(url, options);
   
@@ -55,16 +56,33 @@ router.post('/create-inquiry', async (req, res) => {
     
     const { firstName, lastName, email, phone } = req.body;
     
-    // Validate required fields
-    if (!email || typeof email !== 'string') {
-      console.error('Email validation failed:', { email, type: typeof email });
+    // Strict email validation
+    if (!email) {
+      console.error('Email validation failed: Email is required');
       return res.status(400).json({
         success: false,
-        error: 'Valid email address is required'
+        error: 'Email address is required'
       });
     }
 
-    // Clean and validate data
+    if (typeof email !== 'string') {
+      console.error('Email validation failed: Email must be a string, received:', typeof email, email);
+      return res.status(400).json({
+        success: false,
+        error: 'Email address must be a valid string'
+      });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      console.error('Email validation failed: Invalid email format:', email);
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email address format'
+      });
+    }
+
+    // Clean and validate all data
     const userData = {
       firstName: firstName && typeof firstName === 'string' ? firstName.trim() : '',
       lastName: lastName && typeof lastName === 'string' ? lastName.trim() : '',
@@ -74,7 +92,16 @@ router.post('/create-inquiry', async (req, res) => {
     
     console.log('Cleaned user data:', JSON.stringify(userData, null, 2));
     
-    // Build the inquiry request - SIMPLIFIED VERSION
+    // Validate template ID
+    if (!process.env.PERSONA_TEMPLATE_ID) {
+      console.error('PERSONA_TEMPLATE_ID environment variable is required');
+      return res.status(500).json({
+        success: false,
+        error: 'Persona template not configured'
+      });
+    }
+
+    // Build the inquiry request with proper field structure
     const inquiryData = {
       data: {
         type: 'inquiry',
@@ -86,23 +113,36 @@ router.post('/create-inquiry', async (req, res) => {
       }
     };
 
-    // Add fields ONLY if they exist and are non-empty
+    // Add fields using the correct Persona field names and structure
     const fields = {};
     
     if (userData.firstName) {
-      fields['name-first'] = { value: userData.firstName };
+      fields['name-first'] = {
+        type: 'string',
+        value: userData.firstName
+      };
     }
     
     if (userData.lastName) {
-      fields['name-last'] = { value: userData.lastName };
+      fields['name-last'] = {
+        type: 'string', 
+        value: userData.lastName
+      };
     }
     
+    // This is the critical fix - ensure email is properly structured
     if (userData.email) {
-      fields['email-address'] = { value: userData.email };
+      fields['email-address'] = {
+        type: 'string',
+        value: userData.email
+      };
     }
     
     if (userData.phone) {
-      fields['phone-number'] = { value: userData.phone };
+      fields['phone-number'] = {
+        type: 'string',
+        value: userData.phone
+      };
     }
     
     // Only add fields if we have any
