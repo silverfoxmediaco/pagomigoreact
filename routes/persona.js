@@ -47,38 +47,76 @@ const personaApiCall = async (endpoint, method = 'GET', data = null) => {
   return await response.json();
 };
 
-// POST /api/persona/create-inquiry
+// POST /api/persona/create-inquiry - FIXED VERSION
 router.post('/create-inquiry', async (req, res) => {
   try {
     console.log('Creating Persona inquiry for user:', req.user?.userId);
+    console.log('Raw request body:', JSON.stringify(req.body, null, 2));
     
     const { firstName, lastName, email, phone } = req.body;
     
-    // Create inquiry data
+    // Validate required fields
+    if (!email || typeof email !== 'string') {
+      console.error('Email validation failed:', { email, type: typeof email });
+      return res.status(400).json({
+        success: false,
+        error: 'Valid email address is required'
+      });
+    }
+
+    // Clean and validate data
+    const userData = {
+      firstName: firstName && typeof firstName === 'string' ? firstName.trim() : '',
+      lastName: lastName && typeof lastName === 'string' ? lastName.trim() : '',
+      email: email.trim().toLowerCase(),
+      phone: phone && typeof phone === 'string' ? phone.trim() : ''
+    };
+    
+    console.log('Cleaned user data:', JSON.stringify(userData, null, 2));
+    
+    // Build the inquiry request - SIMPLIFIED VERSION
     const inquiryData = {
       data: {
         type: 'inquiry',
         attributes: {
-          'inquiry-template-id': process.env.PERSONA_TEMPLATE_ID || 'itmpl_sandbox_default',
-          'reference-id': req.user?.userId || `user_${Date.now()}`,
-          'note': `Pagomigo user verification - ${email || 'No email provided'}`
+          'inquiry-template-id': process.env.PERSONA_TEMPLATE_ID,
+          'reference-id': String(req.user?.userId || `user_${Date.now()}`),
+          'note': `Pagomigo verification for ${userData.email}`
         }
       }
     };
 
-    // Add prefill data if provided
-    if (firstName || lastName || email || phone) {
-      inquiryData.data.attributes.fields = {};
-      
-      if (firstName) inquiryData.data.attributes.fields['name-first'] = { value: firstName };
-      if (lastName) inquiryData.data.attributes.fields['name-last'] = { value: lastName };
-      if (email) inquiryData.data.attributes.fields['email-address'] = { value: email };
-      if (phone) inquiryData.data.attributes.fields['phone-number'] = { value: phone };
+    // Add fields ONLY if they exist and are non-empty
+    const fields = {};
+    
+    if (userData.firstName) {
+      fields['name-first'] = { value: userData.firstName };
     }
+    
+    if (userData.lastName) {
+      fields['name-last'] = { value: userData.lastName };
+    }
+    
+    if (userData.email) {
+      fields['email-address'] = { value: userData.email };
+    }
+    
+    if (userData.phone) {
+      fields['phone-number'] = { value: userData.phone };
+    }
+    
+    // Only add fields if we have any
+    if (Object.keys(fields).length > 0) {
+      inquiryData.data.attributes.fields = fields;
+    }
+    
+    console.log('Final Persona request:', JSON.stringify(inquiryData, null, 2));
 
     const result = await personaApiCall('/inquiries', 'POST', inquiryData);
     
-    // Store inquiry ID in user record
+    console.log('Persona API success:', JSON.stringify(result, null, 2));
+    
+    // Update user in database
     if (req.user?.userId && result.data?.id) {
       try {
         await req.db.collection('users').updateOne(
@@ -91,8 +129,10 @@ router.post('/create-inquiry', async (req, res) => {
             }
           }
         );
+        console.log('Updated user database with inquiry ID:', result.data.id);
       } catch (dbError) {
-        console.error('Error updating user with Persona inquiry ID:', dbError);
+        console.error('Database update error:', dbError);
+        // Don't fail the request for DB errors
       }
     }
 
@@ -106,7 +146,9 @@ router.post('/create-inquiry', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating Persona inquiry:', error);
+    console.error('Persona inquiry creation error:', error);
+    console.error('Error stack:', error.stack);
+    
     res.status(500).json({
       success: false,
       error: 'Failed to create identity verification inquiry',
