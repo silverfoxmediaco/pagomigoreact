@@ -9,7 +9,8 @@ const EditProfileForm = ({ onSuccess, className = '', userData }) => {
     username: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    zipCode: ''
   });
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
@@ -23,7 +24,8 @@ const EditProfileForm = ({ onSuccess, className = '', userData }) => {
         username: userData.username || '',
         email: userData.email || '',
         phone: userData.phone || '',
-        address: userData.address || ''
+        address: userData.address || '',
+        zipCode: userData.zipCode || ''
       });
     }
   }, [userData]);
@@ -143,6 +145,18 @@ const EditProfileForm = ({ onSuccess, className = '', userData }) => {
             value={formData.address}
             onChange={handleChange}
             placeholder="Enter your address"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="zipCode">ZIP Code</label>
+          <input
+            type="text"
+            id="zipCode"
+            name="zipCode"
+            value={formData.zipCode}
+            onChange={handleChange}
+            placeholder="Enter your ZIP/postal code"
           />
         </div>
         

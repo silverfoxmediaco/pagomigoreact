@@ -8,7 +8,8 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
     username: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    zipCode: ''
   });
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -44,7 +45,8 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
         username: userData.username || '',
         email: userData.email || '',
         phone: userData.phone || '',
-        address: userData.address || ''
+        address: userData.address || '',
+        zipCode: userData.zipCode || ''
       });
     }
   }, [userData]);
@@ -256,6 +258,18 @@ const EditProfileModal = ({ isOpen, onClose, userData }) => {
                 value={formData.address}
                 onChange={handleChange}
                 placeholder="Enter your address"
+              />
+            </div>
+            
+            <div className={styles['form-group']}>
+              <label htmlFor="edit-zipCode">ZIP Code</label>
+              <input
+                type="text"
+                id="edit-zipCode"
+                name="zipCode"
+                value={formData.zipCode}
+                onChange={handleChange}
+                placeholder="Enter your ZIP/postal code"
               />
             </div>
             
