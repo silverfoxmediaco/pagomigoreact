@@ -297,29 +297,49 @@ const Dashboard = () => {
     }
   };
 
-  // Updated useEffect to handle both Auth0 and fallback token
+  // FIXED: Updated useEffect to handle both Auth0 and fallback token with proper authentication
   useEffect(() => {
     const fetchUnitToken = async () => {
       try {
-        // If Auth0 is authenticated, use Auth0 token
+        // Get the authentication token
+        let authToken;
+        
         if (isAuthenticated) {
           console.log('Using Auth0 token for Unit Banking');
-          const token = await getAccessTokenSilently();
-          setUnitToken(token);
-          console.log('Auth0 token set for Unit');
+          authToken = await getAccessTokenSilently();
         } else {
-          // Fallback to your existing token system
           console.log('Auth0 not authenticated, using fallback token system');
-          const response = await fetch('/api/unit/token');
-          const data = await response.json();
-          setUnitToken(data.token);
-          console.log('Fallback token set for Unit');
+          authToken = localStorage.getItem('token');
         }
+
+        if (!authToken) {
+          console.log('No auth token available, using demo token');
+          setUnitToken("demo.jwt.token");
+          return;
+        }
+
+        // Make authenticated request to Unit token endpoint
+        const response = await fetch('/api/unit/token', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setUnitToken(data.token);
+        console.log('Unit token retrieved successfully');
+
       } catch (err) {
         console.error('Failed to fetch Unit token:', err);
-        // Ultimate fallback to demo token
+        // Use demo token as fallback
         setUnitToken("demo.jwt.token");
-        console.log('Using demo token as ultimate fallback');
+        console.log('Using demo token as fallback');
       }
     };
 
