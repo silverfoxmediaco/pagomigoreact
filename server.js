@@ -9,6 +9,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const plaidRoutes = require('./routes/plaidRoutes');
+const personaRoutes = require('./routes/persona');
+const unitRoutes = require('./routes/unit');
 
 // ADD MAILGUN (MODERN PACKAGE)
 const Mailgun = require('mailgun.js');
@@ -99,11 +101,26 @@ const UserSchema = new mongoose.Schema({
     enum: ['pending', 'approved', 'failed', 'pending_review'],
     default: 'pending'
   },
+  // PERSONA IDENTITY VERIFICATION FIELDS
   personaVerified: {
     type: Boolean,
     default: false
   },
   personaInquiryId: String,
+  persona_inquiry_id: String, // Alternative field name for consistency
+  persona_status: {
+    type: String,
+    enum: ['pending', 'created', 'completed', 'approved', 'failed', 'declined', 'needs_review', 'pending_review', 'expired'],
+    default: 'pending'
+  },
+  persona_updated_at: Date,
+  persona_completed_at: Date,
+  kyc_status: {
+    type: String,
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending'
+  },
+  kyc_completed_at: Date,
   unitCustomerId: String,
   unitCustomerToken: String,
   balance: {
@@ -142,7 +159,6 @@ if (fs.existsSync(buildPath)) {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/api/plaid', plaidRoutes);
 
 // JWT Middleware for protected routes
 const authenticateToken = (req, res, next) => {
@@ -161,6 +177,19 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+// Database middleware - provides access to MongoDB for routes
+const databaseMiddleware = (req, res, next) => {
+  req.db = mongoose.connection.db;
+  next();
+};
+
+// API Routes
+app.use('/api/plaid', plaidRoutes);
+app.use('/api/persona', authenticateToken, databaseMiddleware, personaRoutes);
+app.use('/api/unit', authenticateToken, unitRoutes);
+
+// Unit Banking API routes are now handled by /api/unit routes
 
 // EMAIL VERIFICATION ENDPOINTS (MODERN MAILGUN)
 app.post('/api/email/send-verification', async (req, res) => {
@@ -479,7 +508,9 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
       phone_verified: user.phoneVerified,
       email: user.email,
       address: getAddressString(user), // FIXED: Always returns a string
-      kyc_status: user.personaVerified ? 'completed' : 'pending',
+      kyc_status: user.persona_status || (user.personaVerified ? 'completed' : 'pending'),
+      persona_status: user.persona_status || 'pending',
+      persona_inquiry_id: user.persona_inquiry_id || user.personaInquiryId,
       balance: user.balance || 0,
       createdAt: user.createdAt
     };
@@ -715,4 +746,5 @@ app.listen(PORT, function() {
   console.log('Mailgun Email endpoints ready');
   console.log('Auth endpoints ready');
   console.log('User profile endpoints ready');
+  console.log('Persona identity verification endpoints ready');
 });
