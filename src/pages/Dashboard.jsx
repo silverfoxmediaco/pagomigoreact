@@ -248,9 +248,9 @@ const Dashboard = () => {
           </Alert>
         ) : (
           <>
-            {/* Profile and Account Overview - Updated Layout */}
+            {/* Profile and Account Overview Row - FIXED: Single container for both cards */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-              {/* Profile Card - 60% width on desktop, 100% on mobile */}
+              {/* Profile Card - 50% width on desktop, 100% on mobile */}
               <Grid item xs={12} md={6}>
                 <Card elevation={2} sx={{ height: '100%' }}>
                   <CardContent sx={{ p: 3 }}>
@@ -362,7 +362,7 @@ const Dashboard = () => {
                 </Card>
               </Grid>
               
-              {/* Account Balance Card - 40% width on desktop, 100% on mobile */}
+              {/* Account Balance Card - 50% width on desktop, 100% on mobile */}
               <Grid item xs={12} md={6}>
                 <Card elevation={2} sx={{ height: '100%' }}>
                   <CardContent sx={{ p: 3 }}>
