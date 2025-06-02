@@ -251,7 +251,7 @@ const Dashboard = () => {
             {/* Profile and Account Overview - Updated Layout */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
               {/* Profile Card - 60% width on desktop, 100% on mobile */}
-              <Grid item xs={12} md={7.2}>
+              <Grid item xs={12} md={6}>
                 <Card elevation={2} sx={{ height: '100%' }}>
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
@@ -363,7 +363,7 @@ const Dashboard = () => {
               </Grid>
               
               {/* Account Balance Card - 40% width on desktop, 100% on mobile */}
-              <Grid item xs={12} md={4.8}>
+              <Grid item xs={12} md={6}>
                 <Card elevation={2} sx={{ height: '100%' }}>
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>

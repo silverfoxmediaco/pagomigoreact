@@ -298,6 +298,7 @@ const OnboardingVerification = () => {
               {currentLoading ? 'Starting Verification...' : 'Verify Identity'}
             </Button>
             
+            {/* COMMENTED OUT: Skip button
             <Button
               variant="outlined"
               size="large"
@@ -306,6 +307,7 @@ const OnboardingVerification = () => {
             >
               Skip for Now
             </Button>
+            */}
           </Box>
 
           {/* Help Text */}
