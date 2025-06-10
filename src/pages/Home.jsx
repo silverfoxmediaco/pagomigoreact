@@ -128,7 +128,10 @@ useEffect(() => {
       <Navigation />
       
       <main className="hero-section">
-        <div className="video-background">
+      <div className="image-background">
+      <div className="image-overlay"></div>
+      </div> 
+        {/*<div className="video-background">
           <div className="video-overlay"></div>
           <video autoPlay muted loop id="hero-video">
             <source src={heroVideo} type="video/mp4" />
@@ -138,7 +141,7 @@ useEffect(() => {
             <source src={mobileVideo} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
-        </div>
+        </div>*/}
         <div className="hero-text">
           <h1 className="heroh1">{t('heroTitle')}</h1>
           <h2 className="heroh2">{t('heroSubtitle')}</h2>
