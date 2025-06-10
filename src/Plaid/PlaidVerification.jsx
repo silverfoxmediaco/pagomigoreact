@@ -58,7 +58,7 @@ const PlaidVerification = () => {
     <section className={styles.plaidVerificationSection}>
       <div className={styles.sectionHeader}>
       <h2>Plaid Identity Verification</h2>
-        <h2>For North American and Europian users to - Verify Your Identity</h2>
+        <h2>For North American and European users to - Verify Your Identity</h2>
       </div>
 
       {error && <div className={styles.errorMessage}>{error}</div>}
